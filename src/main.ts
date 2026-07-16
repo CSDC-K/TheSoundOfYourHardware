@@ -4,11 +4,15 @@ import { invoke } from "@tauri-apps/api/core";
 
 const SoundList = document.getElementById("soundlist") as HTMLSelectElement;
 const AppList = document.getElementById("applist") as HTMLUListElement;
+
 const MainDiv = document.getElementById("maindiv") as HTMLDivElement;
 const AppDiv = document.getElementById("appdiv") as HTMLDivElement;
 const AppCentralDiv = document.getElementById("appcentraldiv") as HTMLDivElement;
+const DocDiv = document.getElementById("docdiv") as HTMLDivElement;
+
 const MainTitle = document.getElementById("maintitle") as HTMLHeadElement;
 
+const DocBtn = document.getElementById("docbtn") as HTMLButtonElement;
 const PlaySound = document.getElementById("playsound") as HTMLButtonElement;
 const RefreshSounds = document.getElementById("refreshsounds") as HTMLButtonElement;
 const AppListBtn = document.getElementById("applistbtn") as HTMLButtonElement;
@@ -118,28 +122,37 @@ RefreshSounds.addEventListener("click", async () => {
 
 AppListBtn.addEventListener("click", async () => {
   MainDiv.style.display = "none";
+  DocDiv.style.display = "none";
+  AppDiv.style.display = "block";
   LoadAnimations();
 
   try {
-    const apps = await invoke('get_apps');
-    AppList.innerHTML = "";
-
     const processList = await invoke<ProcessList[]>("get_apps");
+    AppList.innerHTML = "";
 
     for (const process of processList) {
       const li = document.createElement("li");
       li.className = "applist-value";
       li.dataset.pid = process.PID.toString();
-
       li.innerText = `${process.NAME}`;
       AppList.appendChild(li);
     }
-  LoadAnimations();
+    
+    LoadAnimations();
   } catch (e) {
     console.error("Error at trying to get applist:", e);
   }
 });
+
 AppCloseBtn.addEventListener("click", () => {
   MainDiv.style.display = "block";
+  AppDiv.style.display = "none";
+  DocDiv.style.display = "none";
   LoadAnimations();
+});
+
+DocBtn.addEventListener("click", () => {
+  MainDiv.style.display = "none";
+  AppDiv.style.display = "none";
+  DocDiv.style.display = "block";
 });
