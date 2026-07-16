@@ -1,0 +1,200 @@
+body{
+  background-color: black;
+}
+
+@keyframes BorderColorAnim {
+  0% { border-color: blue; }
+  10% { border-color: rgb(0, 187, 255); }
+  20% { border-color: rgb(0, 255, 234); }
+  30% { border-color: rgb(0, 255, 128); }
+  40% { border-color: rgb(34, 255, 0); }
+  50% { border-color: rgb(136, 255, 0); }
+  60% { border-color: rgb(145, 255, 0); }
+  70% { border-color: rgb(255, 255, 0); }
+  80% { border-color: rgb(255, 0, 0); }
+  90% { border-color: rgb(247, 0, 255); }
+  100% { border-color: rgb(87, 7, 158); }
+}
+
+@keyframes FontColorer {
+  0% { color: blue; }
+  10% { color: rgb(0, 187, 255); }
+  20% { color: rgb(0, 255, 234); }
+  30% { color: rgb(0, 255, 128); }
+  40% { color: rgb(34, 255, 0); }
+  50% { color: rgb(136, 255, 0); }
+  60% { color: rgb(145, 255, 0); }
+  70% { color: rgb(255, 255, 0); }
+  80% { color: rgb(255, 0, 0); }
+  90% { color: rgb(247, 0, 255); }
+  100% { color: rgb(87, 7, 158); }
+}
+
+.maindiv{
+  border-radius: 15px;
+  border: 1px solid transparent;
+  background-color: rgb(28, 28, 28);
+  width: 700px;
+  height: 525px;
+  position: absolute;
+  top: 15px;
+  left: 50px;
+  animation-name: BorderColorAnim;
+  animation-duration: 3s;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+  display: block;
+}
+
+.appdiv{
+  background-color: rgba(255,255,255, 0.1);
+  backdrop-filter: blur(50px);
+  width: 100%;
+  height: 100%;
+  display: block;
+
+  position: absolute;
+  top: 0%;
+  left: 0%;
+}
+
+.appcentraldiv{
+  width: 50%;
+  height: 75%;
+  background-color: rgb(28, 28, 28);
+  position: absolute;
+  top: 50px;
+  left: 200px;
+  border: 1px solid;
+  animation-name: BorderColorAnim;
+  animation-duration: 3s;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+}
+
+.title{
+  color: white;
+  font-family: Anta;
+  position: absolute;
+  left: 125px;
+  top: -15px;
+}
+
+.soundlist{
+  font-family: Audiowide;
+  background-color: rgb(35, 35, 35);
+  position: absolute;
+  top: 150px;
+  left: 50px;
+}
+
+.applist{
+  font-family: Audiowide;
+  background-color: rgb(35, 35, 35);
+  position: absolute;
+  top: 150px;
+  left: 325px;
+  width: 125px;
+  height: 30px;
+  border-radius: 10px;
+}
+
+.cpuratelimit{
+  position: absolute;
+  top: 250px;
+  left: 50px;
+  width: 150px;
+  background-color: black;
+}
+
+.gpuratelimit{
+  position: absolute;
+  top: 325px;
+  left: 50px;
+  width: 150px;
+  background-color: black;
+}
+
+.ramratelimit{
+  position: absolute;
+  top: 400px;
+  left: 50px;
+  width: 150px;
+  background-color: black;
+}
+
+.heatratelimit{
+  position: absolute;
+  top: 475px;
+  left: 50px;
+  width: 150px;
+  background-color: black;
+}
+
+.lb1{
+  position: absolute;
+  top: 125px;
+  left: 50px;
+  color: white;
+  font-family: Audiowide;
+}
+
+.lb2{
+  position: absolute;
+  top: 225px;
+  left: 50px;
+  color: white;
+  font-family: Audiowide;
+}
+
+.lb3{
+  position: absolute;
+  top: 300px;
+  left: 50px;
+  color: white;
+  font-family: Audiowide;
+}
+
+.lb4{
+  position: absolute;
+  top: 375px;
+  left: 50px;
+  color: white;
+  font-family: Audiowide;
+}
+
+.lb5{
+  position: absolute;
+  top: 450px;
+  left: 50px;
+  color: white;
+  font-family: Audiowide;
+}
+
+.lb6{
+  position: absolute;
+  top: 125px;
+  left: 325px;
+  color: white;
+  font-family: Audiowide;
+}
+
+.docbtn{
+  background-color: darkgray;
+  border-radius: 10px;
+  width: 100px;
+  cursor: pointer;
+  
+  position: absolute;
+  top: 50px;
+  left: 300px;
+}
+
+.app_close_btn{
+  background-color: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  position: absolute;
+  top: 89%;
+  left: 175px;
+}

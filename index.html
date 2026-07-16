@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tauri App</title>
+    <script type="module" src="/src/main.ts" defer></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anta&family=Audiowide&display=swap" rel="stylesheet">
+
+  </head>
+  <body>
+
+    <div class="appdiv" id="appdiv">
+      <div class="appcentraldiv">
+        <button class="app_close_btn" id="app_close_btn">
+          <img src="src/assets/close.png" width="24px" height="24px">
+        </button>
+      </div>      
+    </div>
+
+    <div class="maindiv" id="maindiv">
+
+      <h1 class="title" id="maintitle">The Sound Of Your Hardware</h1>
+
+      <button id="docbtn"  type="button" class="docbtn">
+        <img id="docimg" src="src/assets/doc.png" width="24px" height="24px">
+      </button>
+
+      <label class="lb1" id="label1">Choose a sound</label>
+      <select class="soundlist" id="soundlist">
+        <option value="None">Select a sound</option>
+      </select>
+
+      <label class="lb6" id="label6">Choose a app</label>
+      <button id="applist" class="applist">
+        <img src="src/assets/list.png" width="24px" height="24px">
+      </button>
+
+      <button id="playsound" style="display: flex; justify-content: center; background-color: transparent; border-radius: 10px; align-items: center; position: absolute; top: 150px; left: 200px; height: 32px; width: 50px; cursor: pointer;" type="button" class="playsound">
+        <img id="playimg" src="src/assets/play.png" width="24px" height="24px">
+      </button>
+
+      <button id="refreshsounds" style="display: flex; justify-content: center; background-color: transparent; border-radius: 10px; align-items: center; position: absolute; top: 150px; left: 255px; height: 32px; width: 50px; cursor: pointer;" type="button" class="playsound">
+        <img id="rfimg" src="src/assets/refresh.png" width="24px" height="24px">
+      </button>
+
+      <label class="lb2" id="label2">Cpu Limit : </label>
+      <input type="range" id="cpuratelimit" class="cpuratelimit" min="0" max="100" value="50" step="1">
+      <label class="lb3" id="label3">Gpu Limit : </label>
+      <input type="range" id="gpuratelimit" class="gpuratelimit" min="0" max="100" value="50" step="1">
+      <label class="lb4" id="label4">Ram Limit : </label>
+      <input type="range" id="ramratelimit" class="ramratelimit" min="0" max="100" value="50" step="1">
+      <label class="lb5" id="label5">Heat Limit : </label>
+      <input type="range" id="heatratelimit" class="heatratelimit" min="0" max="100" value="50" step="1">
+    </div>
+  </body>
+</html>
