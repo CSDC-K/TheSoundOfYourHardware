@@ -1,23 +1,35 @@
 use tokio::process::Command;
 use sysinfo::{self, System};
 
+use serde::{Deserialize, Serialize};
+
+
+#[derive(Serialize)]
+struct ProcessList{
+    #[allow(non_snake_case)]
+    PID: u32,
+    #[allow(non_snake_case)]
+    NAME: String
+}
+
+
 #[tauri::command]
 async fn get_sounds() -> Vec<String> {
     return vec![format!("test"), format!("tesss")];
 }
 
 #[tauri::command]
-async fn get_apps() -> Vec<String> {
+async fn get_apps() -> Result<Vec<ProcessList>, String> {
     let mut sys = System::new_all();
-    let mut process_vector : Vec<String> = vec![];
+    let mut process_vector : Vec<ProcessList> = vec![];
     sys.refresh_all();
 
     for (pid, process) in sys.processes(){
         let process_name = process.name().to_string_lossy().into_owned();
-        process_vector.push(process_name);
+        process_vector.push(ProcessList { PID: pid.as_u32(), NAME: process_name });
     }
 
-    process_vector
+    Ok(process_vector)
 
 }
 

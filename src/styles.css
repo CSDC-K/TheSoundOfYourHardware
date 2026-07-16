@@ -88,7 +88,18 @@ body{
   left: 50px;
 }
 
-.applist{
+
+.app_close_btn{
+  background-color: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  position: absolute;
+  top: 92%;
+  left: 175px;
+  height: 32px;
+}
+
+.applistbtn{
   font-family: Audiowide;
   background-color: rgb(35, 35, 35);
   position: absolute;
@@ -97,6 +108,44 @@ body{
   width: 125px;
   height: 30px;
   border-radius: 10px;
+}
+
+.applist {
+  width: 325px; 
+  height: 75%;
+  position: absolute;
+  border-radius: 15px;
+  top: 15%; 
+  left: 10%;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+
+  overflow-x: hidden; 
+}
+
+.applist-value {
+  height: 50px;
+  font-family: "Anta", sans-serif;
+  font-size: 25px;
+  text-align: center;
+  background-color: rgb(41, 41, 41);
+  width: 100%;
+  padding: 20px 10px;
+  border-bottom: 2px solid rgb(22, 22, 22);
+  cursor: pointer;
+  box-sizing: border-box;
+
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+}
+
+.applist-value:hover {
+  background-color: rgb(51, 51, 51);
 }
 
 .cpuratelimit{
@@ -188,13 +237,4 @@ body{
   position: absolute;
   top: 50px;
   left: 300px;
-}
-
-.app_close_btn{
-  background-color: transparent;
-  border-radius: 10px;
-  cursor: pointer;
-  position: absolute;
-  top: 89%;
-  left: 175px;
 }

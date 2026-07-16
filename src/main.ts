@@ -1,7 +1,9 @@
+import { app } from "@tauri-apps/api";
 import { invoke } from "@tauri-apps/api/core";
 
 
 const SoundList = document.getElementById("soundlist") as HTMLSelectElement;
+const AppList = document.getElementById("applist") as HTMLUListElement;
 const MainDiv = document.getElementById("maindiv") as HTMLDivElement;
 const AppDiv = document.getElementById("appdiv") as HTMLDivElement;
 const AppCentralDiv = document.getElementById("appcentraldiv") as HTMLDivElement;
@@ -9,7 +11,7 @@ const MainTitle = document.getElementById("maintitle") as HTMLHeadElement;
 
 const PlaySound = document.getElementById("playsound") as HTMLButtonElement;
 const RefreshSounds = document.getElementById("refreshsounds") as HTMLButtonElement;
-const AppList = document.getElementById("applist") as HTMLButtonElement;
+const AppListBtn = document.getElementById("applistbtn") as HTMLButtonElement;
 const AppCloseBtn = document.getElementById("app_close_btn") as HTMLButtonElement;
 
 const PlaySoundImg = document.getElementById("playimg") as HTMLImageElement;
@@ -28,6 +30,11 @@ const Label6 = document.getElementById("label6") as HTMLLabelElement;
 var HeatRateLimitValue = HeatRateLimit.value;
 var PlayingSound = false;
 
+interface ProcessList{
+  PID : Number,
+  NAME : String
+}
+
 //async function RefreshApps() {
 //  console.log("EVENT: refresh_apps")
 //  AppList.length = 0;
@@ -40,13 +47,20 @@ var PlayingSound = false;
 //}
 
 async function LoadAnimations() {
-  MainTitle.style.animation = "FontColorer 3s alternate infinite, UpSide 1s ease-out forwards";
-  Label1.style.animation = "FontColorer 3s alternate infinite, UpSide 1s ease-out forwards";
-  Label2.style.animation = "FontColorer 3s alternate infinite, UpSide 1s ease-out forwards";
-  Label3.style.animation = "FontColorer 3s alternate infinite, UpSide 1s ease-out forwards";
-  Label4.style.animation = "FontColorer 3s alternate infinite, UpSide 1s ease-out forwards";
-  Label5.style.animation = "FontColorer 3s alternate infinite, UpSide 1s ease-out forwards";
-  Label6.style.animation = "FontColorer 3s alternate infinite, UpSide 1s ease-out forwards";
+  const staticElements = [MainTitle, Label1, Label2, Label3, Label4, Label5, Label6];
+  const dynamicElements = Array.from(document.querySelectorAll(".applist-value"));
+
+  const allElements = [...staticElements, ...dynamicElements];
+
+  allElements.forEach(el => {
+    if (el) (el as HTMLElement).style.animation = "none";
+  });
+
+  void document.body.offsetHeight; 
+  const animString = "FontColorer 3s alternate infinite, UpSide 1s ease-out forwards";
+  allElements.forEach(el => {
+    if (el) (el as HTMLElement).style.animation = animString;
+  });
 }
 
 //(window as any).GrowMenu = GrowMenu;
@@ -102,10 +116,30 @@ RefreshSounds.addEventListener("click", async () => {
 });
 
 
-AppList.addEventListener("click", () => {
-  MainDiv.style.display = "none"
-});
+AppListBtn.addEventListener("click", async () => {
+  MainDiv.style.display = "none";
+  LoadAnimations();
 
-AppCloseBtn.addEventListener("click", () =>{
-  MainDiv.style.display = "block"
+  try {
+    const apps = await invoke('get_apps');
+    AppList.innerHTML = "";
+
+    const processList = await invoke<ProcessList[]>("get_apps");
+
+    for (const process of processList) {
+      const li = document.createElement("li");
+      li.className = "applist-value";
+      li.dataset.pid = process.PID.toString();
+
+      li.innerText = `${process.NAME}`;
+      AppList.appendChild(li);
+    }
+  LoadAnimations();
+  } catch (e) {
+    console.error("Error at trying to get applist:", e);
+  }
+});
+AppCloseBtn.addEventListener("click", () => {
+  MainDiv.style.display = "block";
+  LoadAnimations();
 });
