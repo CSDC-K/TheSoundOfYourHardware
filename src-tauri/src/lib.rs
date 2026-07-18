@@ -1,3 +1,9 @@
+use std::{io};
+use std::fs::{DirEntry,create_dir_all, read_dir};
+use std::path::{Path, PathBuf};
+use infer;
+
+use tauri::{AppHandle, Manager};
 use tokio::process::Command;
 use sysinfo::{self, System};
 
@@ -14,8 +20,31 @@ struct ProcessList{
 
 
 #[tauri::command]
-async fn get_sounds() -> Vec<String> {
-    return vec![format!("test"), format!("tesss")];
+async fn get_sounds(handle : AppHandle) -> Vec<String> {
+    let mut path = handle.path().app_local_data_dir().expect("Got an error while trying to get app_local_data_dir");
+    path.push("Sounds/");
+    let mut sound_vector : Vec<String> = vec![];
+    for entry in read_dir(path).expect("Got an error while trying to read sounds dir"){
+        let dir = entry.expect("Got an error while trying to get DirEntry");
+        let filematcher = infer::get_from_path(dir.path().as_path());
+        match  filematcher{
+            Ok(Some(info)) => {
+                if info.mime_type() == "audio/mpeg"{
+                    sound_vector.push(dir.path().file_name().unwrap().to_string_lossy().into_owned());
+                }
+
+            }
+            Ok(None) => {
+                println!("Found broken or unexpected file.");
+            }
+
+            Err(e) => {
+                println!("Got an error while trying to read file_type : {}", e);
+            }
+        }
+    }
+
+    sound_vector
 }
 
 #[tauri::command]
@@ -37,6 +66,21 @@ async fn get_apps() -> Result<Vec<ProcessList>, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app|{
+            let mut path = app.app_handle().path().app_local_data_dir().expect("Got an error while trying to get app_local_data_dir");
+            if !path.exists(){
+                println!("Trying to create app_local_data_dir");
+                create_dir_all(&path).expect("Got an error while trying to create app_local_data_dir");
+            }
+
+            path.push("Sounds/");
+            if !path.exists(){
+                println!("Trying to create Sounds path");
+                create_dir_all(&path).expect("Got an error while trying to create Sounds path.");
+            }
+            Ok(())
+
+        })
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             get_sounds,

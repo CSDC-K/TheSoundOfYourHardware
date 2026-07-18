@@ -17,6 +17,7 @@ const PlaySound = document.getElementById("playsound") as HTMLButtonElement;
 const RefreshSounds = document.getElementById("refreshsounds") as HTMLButtonElement;
 const AppListBtn = document.getElementById("applistbtn") as HTMLButtonElement;
 const AppCloseBtn = document.getElementById("app_close_btn") as HTMLButtonElement;
+const AppRefreshBtn = document.getElementById("app_refresh_btn") as HTMLButtonElement;
 
 const PlaySoundImg = document.getElementById("playimg") as HTMLImageElement;
 
@@ -33,6 +34,7 @@ const Label6 = document.getElementById("label6") as HTMLLabelElement;
 
 var HeatRateLimitValue = HeatRateLimit.value;
 var PlayingSound = false;
+var TargetProcessPidValue = "";
 
 interface ProcessList{
   PID : Number,
@@ -69,8 +71,32 @@ async function LoadAnimations() {
 
 //(window as any).GrowMenu = GrowMenu;
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  SoundList.length = 0;
+  SoundList.add(new Option("Select a sound", "None"));
+  await invoke("get_sounds").then((sounds) => {
+    const Sounds = sounds as string[];
+    for (const sound of Sounds) {
+      SoundList.add(new Option(sound, sound));
+    }
+  });
 
+  try {
+    const processList = await invoke<ProcessList[]>("get_apps");
+    AppList.innerHTML = "";
+
+    for (const process of processList) {
+      const li = document.createElement("li");
+      li.className = "applist-value";
+      li.dataset.pid = process.PID.toString();
+      li.innerText = `${process.NAME}`;
+      AppList.appendChild(li);
+    }
+    
+    LoadAnimations();
+  } catch (e) {
+    console.error("Error at trying to get applist:", e);
+  }
   LoadAnimations()
 
 });
@@ -119,13 +145,26 @@ RefreshSounds.addEventListener("click", async () => {
   });
 });
 
+AppList.addEventListener("click", async(event) => {
+  console.log("test");
+  const target = event.target as HTMLElement;
+  if (target && target.classList.contains("applist-value")) {
+    const selectedPID = target.dataset.pid;
+    if (selectedPID) {
+      Label6.textContent = "Choose a app (" + selectedPID + ")";
+      TargetProcessPidValue = selectedPID
+    }
+  }
+});
 
 AppListBtn.addEventListener("click", async () => {
   MainDiv.style.display = "none";
   DocDiv.style.display = "none";
   AppDiv.style.display = "block";
   LoadAnimations();
+});
 
+AppRefreshBtn.addEventListener("click", async() => {
   try {
     const processList = await invoke<ProcessList[]>("get_apps");
     AppList.innerHTML = "";
