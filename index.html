@@ -17,7 +17,11 @@
 
   
     <div class="docdiv" id="docdiv">
-
+      <div class="doccentraldiv">
+        <button class="doc_close_btn" id="doc_close_btn">
+          <img src="src/assets/close.png" width="24px" height="24px">
+        </button>
+      </div>
     </div>
 
     <div class="appdiv" id="appdiv">
@@ -68,19 +72,30 @@
       </button>
 
       <label class="lb2" id="label2">Cpu Limit : </label>
-      <input type="range" id="cpuratelimit" class="cpuratelimit" min="0" max="100" value="50" step="1">
+      <input type="range" id="cpuratelimit" class="cpuratelimit" min="0" max="100" value="0" step="1">
       <label class="lb3" id="label3">Gpu Limit : </label>
-      <input type="range" id="gpuratelimit" class="gpuratelimit" min="0" max="100" value="50" step="1">
+      <input type="range" id="gpuratelimit" class="gpuratelimit" min="0" max="100" value="0" step="1">
       <label class="lb4" id="label4">Ram Limit : </label>
-      <input type="range" id="ramratelimit" class="ramratelimit" min="0" max="100" value="50" step="1">
+      <input type="range" id="ramratelimit" class="ramratelimit" min="0" max="100" value="0" step="1">
       <label class="lb5" id="label5">Heat : </label>
-      <input type="range" id="heatratelimit" class="heatratelimit" min="0" max="100" value="50" step="1">
+      <input type="range" id="heatratelimit" class="heatratelimit" min="0" max="100" value="0" step="1">
 
 
       <div class="adjustmentsdiv" id="adjustmentsdiv">
-        <h1 style="font-family: Audiowide; color: white; position: absolute; top: -20px; left: 110px">Adjustments</h1>
+        <h1 style="font-family: Audiowide; color: white; position: absolute; top: -20px; left: 110px" id="adjdivtitle">Adjustments</h1>
         <label class="lb7" id="label7">Sound Level : </label>
-        <input type="range" id="soundlevel" class="soundlevel" min="0" max="200" value="50" step="1">
+        <input type="range" id="soundlevel" class="soundlevel" min="0" max="200" value="0" step="1">
+        <label class="lb8" id="label8">Check Interval : </label>
+        <input type="range" id="checkinterval" class="checkinterval" min="0" max="10.0" value="0" step="0.1">
+        <label class="lb9" id="label9">Choose a soundFX</label>
+        <select class="soundfxlist" id="soundfxlist">
+          <option value="None">Select a soundFX</option>
+          <option value="1.5x">Speed up 1.5x</option>
+          <option value="1.75x">Speed up 1.75x</option>
+          <option value="2.0x">Speed up 2.0x</option>
+          <option value="2.5x">Speed up 2.5x</option>
+          <option value="3.0x">Speed up 3.0x</option>
+        </select>
       </div>
 
     </div>

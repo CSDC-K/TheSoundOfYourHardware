@@ -11,6 +11,7 @@ const AppCentralDiv = document.getElementById("appcentraldiv") as HTMLDivElement
 const DocDiv = document.getElementById("docdiv") as HTMLDivElement;
 
 const MainTitle = document.getElementById("maintitle") as HTMLHeadElement;
+const AdjDivTitle = document.getElementById("adjdivtitle") as HTMLHeadElement;
 
 const DocBtn = document.getElementById("docbtn") as HTMLButtonElement;
 const PlaySound = document.getElementById("playsound") as HTMLButtonElement;
@@ -19,6 +20,7 @@ const AppListBtn = document.getElementById("applistbtn") as HTMLButtonElement;
 const AppCloseBtn = document.getElementById("app_close_btn") as HTMLButtonElement;
 const AppRefreshBtn = document.getElementById("app_refresh_btn") as HTMLButtonElement;
 const AppDeleteBtn = document.getElementById("app_delete_btn") as HTMLButtonElement;
+const DocCloseBtn = document.getElementById("doc_close_btn") as HTMLButtonElement;
 
 const PlaySoundImg = document.getElementById("playimg") as HTMLImageElement;
 
@@ -27,6 +29,7 @@ const GpuRateLimit = document.getElementById("gpuratelimit") as HTMLInputElement
 const RamRateLimit = document.getElementById("ramratelimit") as HTMLInputElement;
 const HeatRateLimit = document.getElementById("heatratelimit") as HTMLInputElement;
 const SoundLevel = document.getElementById("soundlevel") as HTMLInputElement;
+const CheckInterval = document.getElementById("checkinterval") as HTMLInputElement;
 const Label1 = document.getElementById("label1") as HTMLLabelElement;
 const Label2 = document.getElementById("label2") as HTMLLabelElement;
 const Label3 = document.getElementById("label3") as HTMLLabelElement;
@@ -34,6 +37,8 @@ const Label4 = document.getElementById("label4") as HTMLLabelElement;
 const Label5 = document.getElementById("label5") as HTMLLabelElement;
 const Label6 = document.getElementById("label6") as HTMLLabelElement;
 const Label7 = document.getElementById("label7") as HTMLLabelElement;
+const Label8 = document.getElementById("label8") as HTMLLabelElement;
+const Label9 = document.getElementById("label9") as HTMLLabelElement;
 
 
 var SoundLevelValue = SoundLevel.value;
@@ -57,7 +62,7 @@ interface ProcessList{
 //}
 
 async function LoadAnimations() {
-  const staticElements = [MainTitle, Label1, Label2, Label3, Label4, Label5, Label6];
+  const staticElements = [MainTitle, AdjDivTitle, Label1, Label2, Label3, Label4, Label5, Label6, Label7, Label8, Label9];
   const dynamicElements = Array.from(document.querySelectorAll(".applist-value"));
 
   const allElements = [...staticElements, ...dynamicElements];
@@ -130,6 +135,10 @@ SoundLevel.addEventListener("input", () => {
   }
 
   Label7.textContent = "Sound Level : " + SoundLevel.value + "%";
+});
+
+CheckInterval.addEventListener("input", () => {
+  Label8.textContent = "Check Interval : " + CheckInterval.value + "S";
 });
 
 PlaySound.addEventListener("click", () => {
@@ -209,6 +218,15 @@ AppCloseBtn.addEventListener("click", () => {
   DocDiv.style.display = "none";
   LoadAnimations();
 });
+
+DocCloseBtn.addEventListener("click", () => {
+  MainDiv.style.display = "block";
+  AppDiv.style.display = "none";
+  DocDiv.style.display = "none";
+  LoadAnimations();
+});
+
+
 
 DocBtn.addEventListener("click", () => {
   MainDiv.style.display = "none";
