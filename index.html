@@ -34,6 +34,10 @@
         <button class="app_refresh_btn" id="app_refresh_btn">
           <img src="src/assets/refresh.png" width="24px" height="24px">
         </button>
+        <button class="app_delete_btn" id="app_delete_btn">
+          <img src="src/assets/delete.png" width="24px" height="24px">
+        </button>
+
       </div>      
     </div>
 
@@ -69,8 +73,16 @@
       <input type="range" id="gpuratelimit" class="gpuratelimit" min="0" max="100" value="50" step="1">
       <label class="lb4" id="label4">Ram Limit : </label>
       <input type="range" id="ramratelimit" class="ramratelimit" min="0" max="100" value="50" step="1">
-      <label class="lb5" id="label5">Heat Limit : </label>
+      <label class="lb5" id="label5">Heat : </label>
       <input type="range" id="heatratelimit" class="heatratelimit" min="0" max="100" value="50" step="1">
+
+
+      <div class="adjustmentsdiv" id="adjustmentsdiv">
+        <h1 style="font-family: Audiowide; color: white; position: absolute; top: -20px; left: 110px">Adjustments</h1>
+        <label class="lb7" id="label7">Sound Level : </label>
+        <input type="range" id="soundlevel" class="soundlevel" min="0" max="200" value="50" step="1">
+      </div>
+
     </div>
   </body>
 </html>

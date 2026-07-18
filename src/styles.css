@@ -46,6 +46,15 @@ body{
   display: block;
 }
 
+.adjustmentsdiv{
+  border: 1px solid black;
+  background-color: rgb(22, 22, 22);
+  width: 450px;
+  height: 300px;
+  position: absolute;
+  top: 220px;
+  left: 225px;
+}
 
 .appdiv {
   display: none;
@@ -124,7 +133,7 @@ body{
   cursor: pointer;
   position: absolute;
   top: 92%;
-  left: 200px;
+  left: 175px;
   height: 32px;
 }
 
@@ -134,10 +143,20 @@ body{
   cursor: pointer;
   position: absolute;
   top: 92%;
-  left: 150px;
+  left: 125px;
   height: 32px;
 }
 
+
+.app_delete_btn{
+  background-color: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  position: absolute;
+  top: 92%;
+  left: 225px;
+  height: 32px;
+}
 .applistbtn{
   font-family: Audiowide;
   background-color: rgb(35, 35, 35);
@@ -219,6 +238,14 @@ body{
   background-color: black;
 }
 
+.soundlevel{
+  position: absolute;
+  top: 100px;
+  left: 15px;
+  width: 150px;
+  background-color: black;
+}
+
 .lb1{
   position: absolute;
   top: 125px;
@@ -263,6 +290,14 @@ body{
   position: absolute;
   top: 125px;
   left: 325px;
+  color: white;
+  font-family: Audiowide;
+}
+
+.lb7{
+  position: absolute;
+  top: 75px;
+  left: 16px;
   color: white;
   font-family: Audiowide;
 }

@@ -18,6 +18,7 @@ const RefreshSounds = document.getElementById("refreshsounds") as HTMLButtonElem
 const AppListBtn = document.getElementById("applistbtn") as HTMLButtonElement;
 const AppCloseBtn = document.getElementById("app_close_btn") as HTMLButtonElement;
 const AppRefreshBtn = document.getElementById("app_refresh_btn") as HTMLButtonElement;
+const AppDeleteBtn = document.getElementById("app_delete_btn") as HTMLButtonElement;
 
 const PlaySoundImg = document.getElementById("playimg") as HTMLImageElement;
 
@@ -25,14 +26,17 @@ const CpuRateLimit = document.getElementById("cpuratelimit") as HTMLInputElement
 const GpuRateLimit = document.getElementById("gpuratelimit") as HTMLInputElement;
 const RamRateLimit = document.getElementById("ramratelimit") as HTMLInputElement;
 const HeatRateLimit = document.getElementById("heatratelimit") as HTMLInputElement;
+const SoundLevel = document.getElementById("soundlevel") as HTMLInputElement;
 const Label1 = document.getElementById("label1") as HTMLLabelElement;
 const Label2 = document.getElementById("label2") as HTMLLabelElement;
 const Label3 = document.getElementById("label3") as HTMLLabelElement;
 const Label4 = document.getElementById("label4") as HTMLLabelElement;
 const Label5 = document.getElementById("label5") as HTMLLabelElement;
 const Label6 = document.getElementById("label6") as HTMLLabelElement;
+const Label7 = document.getElementById("label7") as HTMLLabelElement;
 
-var HeatRateLimitValue = HeatRateLimit.value;
+
+var SoundLevelValue = SoundLevel.value;
 var PlayingSound = false;
 var TargetProcessPidValue = "";
 
@@ -115,13 +119,17 @@ RamRateLimit.addEventListener("input", () => {
 });
 
 HeatRateLimit.addEventListener("input", () => {
-  HeatRateLimitValue = HeatRateLimit.value;
-  if (+HeatRateLimitValue > 80) {
-    Label5.textContent = "Heat Limit : " + HeatRateLimit.value + "℃ (DAYYUM 🥀)";
+  Label5.textContent = "Heat : " + HeatRateLimit.value + "℃";
+});
+
+SoundLevel.addEventListener("input", () => {
+  SoundLevelValue = SoundLevel.value;
+  if (+SoundLevelValue > 100) {
+    Label7.textContent = "Sound Level : " + SoundLevel.value + "% (DAYYUM 🥀)";
     return;
   }
 
-  Label5.textContent = "Heat Limit : " + HeatRateLimit.value + "℃";
+  Label7.textContent = "Sound Level : " + SoundLevel.value + "%";
 });
 
 PlaySound.addEventListener("click", () => {
@@ -152,6 +160,10 @@ AppList.addEventListener("click", async(event) => {
     if (selectedPID) {
       Label6.textContent = "Choose a app (" + selectedPID + ")";
       TargetProcessPidValue = selectedPID
+      MainDiv.style.display = "block"
+      AppDiv.style.display = "none";
+      DocDiv.style.display = "none";
+      LoadAnimations();
     }
   }
 });
@@ -180,6 +192,15 @@ AppRefreshBtn.addEventListener("click", async() => {
   } catch (e) {
     console.error("Error at trying to get applist:", e);
   }
+});
+
+AppDeleteBtn.addEventListener("click", () =>  {
+  Label6.textContent = "Choose a app";
+  TargetProcessPidValue = "None"
+  MainDiv.style.display = "block"
+  AppDiv.style.display = "none";
+  DocDiv.style.display = "none";
+  LoadAnimations();
 });
 
 AppCloseBtn.addEventListener("click", () => {
