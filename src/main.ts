@@ -146,7 +146,6 @@ RefreshSounds.addEventListener("click", async () => {
 });
 
 AppList.addEventListener("click", async(event) => {
-  console.log("test");
   const target = event.target as HTMLElement;
   if (target && target.classList.contains("applist-value")) {
     const selectedPID = target.dataset.pid;
