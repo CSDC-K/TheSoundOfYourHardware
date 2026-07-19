@@ -128,19 +128,34 @@ async function Start() {
     })
   }
 
+  if(SoundList.value == "None"){
+    await Notify("Error", "You have to select one sound!");
+    return
+  }
+
+  if(selectedLimits.length == 0){
+    await Notify("Error", "You have to select one or more than one limit!");
+    return;
+  }
 
 
-  await invoke("create", {
-    structState : {
-      SoundPath : SoundList.value,
-      Limits : selectedLimits,
-      Adjustments : {
-        SOUNDLEVEL : +SoundLevel.value,
-        CHECKINTERVAL : +CheckInterval.value || 0.1,
-        SOUNDFX : await get_soundfx(SoundFXList.value)
+  try{
+    await invoke("create", {
+      structState : {
+        SoundPath : SoundList.value,
+        Limits : selectedLimits,
+        Adjustments : {
+          SOUNDLEVEL : +SoundLevel.value,
+          CHECKINTERVAL : +CheckInterval.value || 0.1,
+          SOUNDFX : await get_soundfx(SoundFXList.value)
+        }
       }
-    }
-  })
+    })
+  } catch (e) {
+    await Notify("Error!", "" + e);
+  }
+
+
 
 }
 
@@ -156,6 +171,14 @@ async function ToZero() {
   TargetProcessPidValue = "";
   Label6.textContent = "Choose a app"
   
+}
+
+
+async function Notify(Title : String, Message : String) {
+  await invoke("notifysend", {
+    title : Title,
+    msg : Message
+  })
 }
 
 async function get_soundfx(Soundfx:String) {
