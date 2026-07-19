@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 
 const SoundList = document.getElementById("soundlist") as HTMLSelectElement;
+const SoundFXList = document.getElementById("soundfxlist") as HTMLSelectElement;
 const AppList = document.getElementById("applist") as HTMLUListElement;
 
 const MainDiv = document.getElementById("maindiv") as HTMLDivElement;
@@ -21,6 +22,8 @@ const AppCloseBtn = document.getElementById("app_close_btn") as HTMLButtonElemen
 const AppRefreshBtn = document.getElementById("app_refresh_btn") as HTMLButtonElement;
 const AppDeleteBtn = document.getElementById("app_delete_btn") as HTMLButtonElement;
 const DocCloseBtn = document.getElementById("doc_close_btn") as HTMLButtonElement;
+const StartBtn = document.getElementById("start") as HTMLButtonElement;
+const ReZeroBtn = document.getElementById("rezero") as HTMLButtonElement;
 
 const PlaySoundImg = document.getElementById("playimg") as HTMLImageElement;
 
@@ -44,11 +47,33 @@ const Label9 = document.getElementById("label9") as HTMLLabelElement;
 var SoundLevelValue = SoundLevel.value;
 var PlayingSound = false;
 var TargetProcessPidValue = "";
+var SelectedFx : SoundFx;
+
+enum SoundFx{
+    SPEED125X,
+    SPEED150X,
+    SPEED175X,
+    SPEED200X,
+    SPEED250X,
+    SPEED300X,
+}
 
 interface ProcessList{
   PID : Number,
   NAME : String
 }
+
+interface Adjustments{
+  SOUNDLEVEL : Number,
+  CHECKINTERVAL : Number,
+  SOUNDFX : SoundFx
+}
+
+type Limits = 
+ | { Limit: "Cpu", LimitValue: { Rate : Number } }
+ | { Limit: "Gpu", LimitValue: { Rate : Number } }
+ | { Limit: "Memory", LimitValue: { Rate : Number } }
+ | { Limit: "Heat", LimitValue: { Rate : Number } }
 
 //async function RefreshApps() {
 //  console.log("EVENT: refresh_apps")
@@ -60,6 +85,51 @@ interface ProcessList{
 //    }
 //  });
 //}
+
+
+async function Start() {
+
+  const selectedLimits : Limits[] = [];
+
+  if(+CpuRateLimit.value > 0){
+    selectedLimits.push({
+      Limit : "Cpu",
+      LimitValue : {Rate : +CpuRateLimit.value},
+    })
+  }
+  if(+GpuRateLimit.value > 0){
+    selectedLimits.push({
+      Limit : "Gpu",
+      LimitValue : {Rate : +GpuRateLimit.value},
+    })
+  }
+  if(+RamRateLimit.value > 0){
+    selectedLimits.push({
+      Limit : "Memory",
+      LimitValue : {Rate : +RamRateLimit.value},
+    })
+  }
+  if(+HeatRateLimit.value > 0){
+    selectedLimits.push({
+      Limit : "Heat",
+      LimitValue : {Rate : +HeatRateLimit.value},
+    })
+  }
+}
+
+async function ToZero() {
+  CpuRateLimit.value = "0";
+  GpuRateLimit.value = "0";
+  RamRateLimit.value = "0";
+  HeatRateLimit.value = "0";
+  SoundLevel.value = "0";
+  CheckInterval.value = "0";
+  SoundList.selectedIndex = 0;
+  SoundFXList.selectedIndex = 0;
+  TargetProcessPidValue = "";
+  Label6.textContent = "Choose a app"
+  
+}
 
 async function LoadAnimations() {
   const staticElements = [MainTitle, AdjDivTitle, Label1, Label2, Label3, Label4, Label5, Label6, Label7, Label8, Label9];
@@ -232,4 +302,12 @@ DocBtn.addEventListener("click", () => {
   MainDiv.style.display = "none";
   AppDiv.style.display = "none";
   DocDiv.style.display = "block";
+});
+
+ReZeroBtn.addEventListener("click", async () => {
+  await ToZero();
+});
+
+StartBtn.addEventListener("click", async () => {
+  
 });

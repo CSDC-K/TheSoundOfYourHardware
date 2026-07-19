@@ -95,6 +95,9 @@ body{
 
 
 .doccentraldiv {
+  text-align: center;
+  color: white;
+  font-family: Audiowide;
   display: "block";
   width: 75%;
   height: 75%;
@@ -107,6 +110,10 @@ body{
   animation-duration: 3s;
   animation-direction: alternate;
   animation-iteration-count: infinite;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+
 }
 
 .title{
@@ -150,8 +157,8 @@ body{
   border-radius: 10px;
   cursor: pointer;
   position: absolute;
-  top: 102%;
-  left: 275px;
+  top: 500px;
+  left: 375px;
   height: 32px;
 }
 

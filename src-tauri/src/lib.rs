@@ -18,6 +18,41 @@ struct ProcessList{
     NAME: String
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "Limit", content = "LimitValue")]
+pub enum Limits {
+    Cpu { Rate : u8 },
+    Gpu { Rate : u8 },
+    Memory { Rate : u8 },
+    Heat { Rate : u8 },
+}
+
+#[derive(serde::Serialize)]
+enum SoundFx{
+    SPEED125X,
+    SPEED150X,
+    SPEED175X,
+    SPEED200X,
+    SPEED250X,
+    SPEED300X,
+}
+
+#[derive(serde::Serialize)]
+struct Adjustments{
+    #[allow(non_snake_case)]
+    SOUNDLEVEL : u8,
+    #[allow(non_snake_case)]
+    CHECKINTERVAL : u8,
+    #[allow(non_snake_case)]
+    SOUNDFX : SoundFx
+}
+
+struct TheApp {
+    SoundPath : String,
+    Limits : Vec<Limits>,
+    adjustments : Adjustments
+    
+}
 
 #[tauri::command]
 async fn get_sounds(handle : AppHandle) -> Vec<String> {
