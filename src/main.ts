@@ -22,7 +22,7 @@ const AppCloseBtn = document.getElementById("app_close_btn") as HTMLButtonElemen
 const AppRefreshBtn = document.getElementById("app_refresh_btn") as HTMLButtonElement;
 const AppDeleteBtn = document.getElementById("app_delete_btn") as HTMLButtonElement;
 const DocCloseBtn = document.getElementById("doc_close_btn") as HTMLButtonElement;
-const StartBtn = document.getElementById("start") as HTMLButtonElement;
+const StartBtn = document.getElementById("start") as HTMLButtonElement; 
 const ReZeroBtn = document.getElementById("rezero") as HTMLButtonElement;
 
 const PlaySoundImg = document.getElementById("playimg") as HTMLImageElement;
@@ -50,12 +50,18 @@ var TargetProcessPidValue = "";
 var SelectedFx : SoundFx;
 
 enum SoundFx{
-    SPEED125X,
-    SPEED150X,
-    SPEED175X,
-    SPEED200X,
-    SPEED250X,
-    SPEED300X,
+    NONE = "NONE",
+    SPEED125X = "SPEED125X",
+    SPEED150X = "SPEED150X",
+    SPEED175X = "SPEED175X",
+    SPEED200X = "SPEED200X",
+    SPEED250X = "SPEED250X",
+    SPEED300X = "SPEED300X",
+}
+
+interface TheSound{
+  SoundPath : string,
+  SoundName : string, 
 }
 
 interface ProcessList{
@@ -67,6 +73,12 @@ interface Adjustments{
   SOUNDLEVEL : Number,
   CHECKINTERVAL : Number,
   SOUNDFX : SoundFx
+}
+
+interface TheApp{
+  SoundPath : String,
+  Limits : Limits[],
+  Adjustments : Adjustments
 }
 
 type Limits = 
@@ -115,6 +127,21 @@ async function Start() {
       LimitValue : {Rate : +HeatRateLimit.value},
     })
   }
+
+
+
+  await invoke("create", {
+    structState : {
+      SoundPath : SoundList.value,
+      Limits : selectedLimits,
+      Adjustments : {
+        SOUNDLEVEL : +SoundLevel.value,
+        CHECKINTERVAL : +CheckInterval.value || 0.1,
+        SOUNDFX : await get_soundfx(SoundFXList.value)
+      }
+    }
+  })
+
 }
 
 async function ToZero() {
@@ -129,6 +156,30 @@ async function ToZero() {
   TargetProcessPidValue = "";
   Label6.textContent = "Choose a app"
   
+}
+
+async function get_soundfx(Soundfx:String) {
+  if (Soundfx == "1.25x") {
+    return SoundFx.SPEED125X
+  }
+  if (Soundfx == "1.50x") {
+    return SoundFx.SPEED150X
+  }
+  if (Soundfx == "1.75x") {
+    return SoundFx.SPEED175X
+  }
+  if (Soundfx == "2.0x") {
+    return SoundFx.SPEED200X
+  }
+  if (Soundfx == "2.5x") {
+    return SoundFx.SPEED250X
+  }
+  if (Soundfx == "3.0x") {
+    return SoundFx.SPEED300X
+  }
+  else{
+    return SoundFx.NONE
+  }
 }
 
 async function LoadAnimations() {
@@ -153,12 +204,17 @@ async function LoadAnimations() {
 window.addEventListener("DOMContentLoaded", async () => {
   SoundList.length = 0;
   SoundList.add(new Option("Select a sound", "None"));
-  await invoke("get_sounds").then((sounds) => {
-    const Sounds = sounds as string[];
-    for (const sound of Sounds) {
-      SoundList.add(new Option(sound, sound));
+  
+  try{
+    const SoundsList = await invoke<TheSound[]>("get_sounds");
+    for (const process of SoundsList) {
+      SoundList.add(new Option(process.SoundName, process.SoundPath));
     }
-  });
+  } catch (e) {
+    console.error(e);
+  }
+
+
 
   try {
     const processList = await invoke<ProcessList[]>("get_apps");
@@ -309,5 +365,5 @@ ReZeroBtn.addEventListener("click", async () => {
 });
 
 StartBtn.addEventListener("click", async () => {
-  
+  await Start();
 });

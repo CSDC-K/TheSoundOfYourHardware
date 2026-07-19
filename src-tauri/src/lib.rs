@@ -10,6 +10,12 @@ use sysinfo::{self, System};
 use serde::{Deserialize, Serialize};
 
 
+#[derive(Debug,Deserialize,Serialize)]
+struct TheSound{
+    SoundPath : String,
+    SoundName : String,
+}
+
 #[derive(Serialize)]
 struct ProcessList{
     #[allow(non_snake_case)]
@@ -27,8 +33,9 @@ pub enum Limits {
     Heat { Rate : u8 },
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Deserialize,Debug)]
 enum SoundFx{
+    NONE,
     SPEED125X,
     SPEED150X,
     SPEED175X,
@@ -37,35 +44,54 @@ enum SoundFx{
     SPEED300X,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Deserialize, Debug)]
 struct Adjustments{
     #[allow(non_snake_case)]
     SOUNDLEVEL : u8,
     #[allow(non_snake_case)]
-    CHECKINTERVAL : u8,
+    CHECKINTERVAL : f32,
     #[allow(non_snake_case)]
     SOUNDFX : SoundFx
 }
 
+#[derive(Deserialize, Serialize, Debug)]
 struct TheApp {
     SoundPath : String,
     Limits : Vec<Limits>,
-    adjustments : Adjustments
-    
+    Adjustments : Adjustments
+}
+
+impl TheApp {
+    pub async fn create(&mut self, handle : AppHandle) {
+        
+    }
+}
+
+
+#[tauri::command]
+async fn create(
+    StructState : TheApp
+) -> Result<(), String>{
+    println!("SoundPath : {}", StructState.SoundPath);
+    println!("Limits : {:?}", StructState.Limits);
+    println!("Adjustments-SOUNDFX : {:?}", StructState.Adjustments.SOUNDFX);
+    println!("Adjustments-CHECKINTERVAL : {}", StructState.Adjustments.CHECKINTERVAL);
+    println!("Adjustments-SOUNDLEVEL : {}", StructState.Adjustments.SOUNDLEVEL);
+    Ok(())
 }
 
 #[tauri::command]
-async fn get_sounds(handle : AppHandle) -> Vec<String> {
+async fn get_sounds(handle : AppHandle) -> Vec<TheSound> {
     let mut path = handle.path().app_local_data_dir().expect("Got an error while trying to get app_local_data_dir");
     path.push("Sounds/");
-    let mut sound_vector : Vec<String> = vec![];
+    let mut sound_vector : Vec<TheSound> = vec![];
     for entry in read_dir(path).expect("Got an error while trying to read sounds dir"){
         let dir = entry.expect("Got an error while trying to get DirEntry");
         let filematcher = infer::get_from_path(dir.path().as_path());
         match  filematcher{
             Ok(Some(info)) => {
                 if info.mime_type() == "audio/mpeg"{
-                    sound_vector.push(dir.path().file_name().unwrap().to_string_lossy().into_owned());
+                    sound_vector.push(TheSound { SoundPath: dir.path().as_path().to_string_lossy().to_string(), SoundName: dir.path().file_name().unwrap().to_string_lossy().into_owned() });
                 }
 
             }
@@ -80,6 +106,15 @@ async fn get_sounds(handle : AppHandle) -> Vec<String> {
     }
 
     sound_vector
+}
+
+#[tauri::command]
+async fn get_sound_path(handle : AppHandle) -> String{
+    let mut path = handle.path().app_local_data_dir().expect("s");
+
+    path.push("Sounds/");
+
+    return  path.to_string_lossy().to_string();
 }
 
 #[tauri::command]
@@ -119,7 +154,9 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             get_sounds,
-            get_apps
+            get_apps,
+            create,
+            get_sound_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
