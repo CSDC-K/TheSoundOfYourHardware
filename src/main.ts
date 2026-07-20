@@ -281,7 +281,7 @@ GpuRateLimit.addEventListener("input", () => {
 });
 
 RamRateLimit.addEventListener("input", () => {
-  Label4.textContent = "Cpu Limit : " + RamRateLimit.value + "%";
+  Label4.textContent = "Ram Limit : " + RamRateLimit.value + "%";
 });
 
 HeatRateLimit.addEventListener("input", () => {

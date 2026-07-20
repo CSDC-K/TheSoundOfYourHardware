@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
-use std::{io};
-use std::fs::{DirEntry,create_dir_all, read_dir};
-use std::path::{Path, PathBuf};
+use std::fs::{create_dir_all, read_dir};
 use infer;
 use tokio::time::{sleep, Duration};
 use tauri::{AppHandle, Manager};
-use sysinfo::{self, System};
+use sysinfo::{self, Components, CpuRefreshKind, MemoryRefreshKind, ProcessRefreshKind, RefreshKind, System};
 
 use serde::{Deserialize, Serialize};
 use tokio_util::sync::CancellationToken;
@@ -148,29 +146,29 @@ async fn stop(handle : &mut AppHandle) -> Result<(), String>{
 
 async fn watch_hardware(cancellationtoken : CancellationToken, app : TheApp, handle : AppHandle){
 
-    for limit in app.Limits.iter(){
+    for limit in app.Limits.iter().cloned(){
         let WorkerStruct = app.clone();
         let WorkerHandle = handle.clone();
         let workertoken = cancellationtoken.clone();
         match limit{
             Limits::Cpu { Rate } => {
                 tokio::spawn(async move {
-                    Async_Cpu( WorkerHandle, WorkerStruct, workertoken).await
+                    Async_Cpu( WorkerHandle, WorkerStruct, workertoken, Rate).await
                 });
             },
             Limits::Gpu { Rate } => {
                 tokio::spawn(async move {
-                    Async_Gpu( WorkerHandle, WorkerStruct, workertoken).await
+                    Async_Gpu( WorkerHandle, WorkerStruct, workertoken, Rate).await
                 });
             },
             Limits::Memory { Rate } => {
                 tokio::spawn(async move {
-                    Async_Memory( WorkerHandle, WorkerStruct, workertoken).await
+                    Async_Memory( WorkerHandle, WorkerStruct, workertoken, Rate).await
                 });
             },
             Limits::Heat { Rate } => {
                 tokio::spawn(async move {
-                    Async_Heat( WorkerHandle, WorkerStruct, workertoken).await
+                    Async_Heat( WorkerHandle, WorkerStruct, workertoken, Rate).await
                 });
             },
         }
@@ -178,11 +176,28 @@ async fn watch_hardware(cancellationtoken : CancellationToken, app : TheApp, han
 }
 
 
-async fn Async_Cpu(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken) {
+async fn Async_Cpu(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
+
+    let mut sys = System::new_with_specifics(
+        RefreshKind::nothing()
+            .with_cpu(CpuRefreshKind::everything())
+    );
+
+
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
-                println!("test for cpu");
+                sys.refresh_cpu_all();
+                let total_cpus = sys.cpus().len();
+                let mut total_cpu_usage = 0.0;
+                for cpu in sys.cpus(){
+                    println!("{} : {}%",cpu.name(), cpu.cpu_usage());
+                    total_cpu_usage = total_cpu_usage + cpu.cpu_usage();
+                }
+
+                total_cpu_usage = total_cpu_usage / total_cpus as f32;
+                println!("Total Usage : {}", total_cpu_usage);
+
             },
 
             _ = cancellationtoken.cancelled() => {
@@ -192,7 +207,7 @@ async fn Async_Cpu(handle : AppHandle, app : TheApp, cancellationtoken : Cancell
     }
 }
 
-async fn Async_Gpu(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken) {
+async fn Async_Gpu(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
@@ -205,11 +220,25 @@ async fn Async_Gpu(handle : AppHandle, app : TheApp, cancellationtoken : Cancell
     }
 }
 
-async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken) {
+async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
+
+    let mut sys = System::new_with_specifics(
+        RefreshKind::nothing()
+            .with_memory(MemoryRefreshKind::everything().with_ram())
+    );
+
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
-                println!("test for mem");
+                sys.refresh_memory();
+
+                let used_memory = sys.used_memory() / 1_000000000;
+                let total_memory = sys.total_memory() / 1_000000000;
+                println!("test : {}", (total_memory * rate as u64) / 100);
+                if used_memory > (total_memory * rate as u64) / 100{
+                    println!("LIMIT REACHED!")
+                }
+
             },
             _ = cancellationtoken.cancelled() => {
                 break;
@@ -218,7 +247,7 @@ async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : Canc
     }
 }
 
-async fn Async_Heat(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken) {
+async fn Async_Heat(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
