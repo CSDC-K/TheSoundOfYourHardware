@@ -26,6 +26,7 @@ const StartBtn = document.getElementById("start") as HTMLButtonElement;
 const ReZeroBtn = document.getElementById("rezero") as HTMLButtonElement;
 
 const PlaySoundImg = document.getElementById("playimg") as HTMLImageElement;
+const StartStopImg = document.getElementById("start_stop_img") as HTMLImageElement;
 
 const CpuRateLimit = document.getElementById("cpuratelimit") as HTMLInputElement;
 const GpuRateLimit = document.getElementById("gpuratelimit") as HTMLInputElement;
@@ -48,6 +49,7 @@ var SoundLevelValue = SoundLevel.value;
 var PlayingSound = false;
 var TargetProcessPidValue = "";
 var SelectedFx : SoundFx;
+var PressedCreateBtn : boolean = false;
 
 enum SoundFx{
     NONE = "NONE",
@@ -136,6 +138,16 @@ async function Start() {
   if(selectedLimits.length == 0){
     await Notify("Error", "You have to select one or more than one limit!");
     return;
+  }
+
+  if(PressedCreateBtn == true){
+    PressedCreateBtn = false;
+    StartStopImg.src = "src/assets/play.png"
+  }
+
+  else if(PressedCreateBtn == false){
+    PressedCreateBtn = true;
+    StartStopImg.src = "src/assets/pause.png"
   }
 
 

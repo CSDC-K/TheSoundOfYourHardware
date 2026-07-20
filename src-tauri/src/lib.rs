@@ -14,7 +14,8 @@ use tokio_util::sync::CancellationToken;
 
 #[derive(Default)]
 struct AppState{
-    thestate : HashMap<String, CancellationToken>
+    thekey : HashMap<String, CancellationToken>,
+    thestate : bool
 }
 
 #[derive(Debug,Deserialize,Serialize)]
@@ -73,11 +74,17 @@ impl TheApp {
 
         let cancellationtoken = CancellationToken::new();
         let active_token = cancellationtoken.clone();
+        let worker_handle = handle.clone();
 
         tokio::spawn(async move {
-            watch_hardware(active_token, self, handle).await;
+            watch_hardware(active_token, self, worker_handle).await;
         });
 
+        let state = handle.state::<Mutex<AppState>>();
+        let mut app_state = state.lock().unwrap();
+        app_state.thekey.insert(format!("TheKey"), cancellationtoken);
+        app_state.thestate = true;
+        
 
     }
 }
@@ -88,17 +95,55 @@ async fn create(
     handle : AppHandle,
     StructState : TheApp
 ) -> Result<(), String>{
-    println!("SoundPath : {}", StructState.SoundPath);
-    println!("Limits : {:?}", StructState.Limits);
-    println!("Adjustments-SOUNDFX : {:?}", StructState.Adjustments.SOUNDFX); 
-    println!("Adjustments-CHECKINTERVAL : {}", StructState.Adjustments.CHECKINTERVAL);
-    println!("Adjustments-SOUNDLEVEL : {}", StructState.Adjustments.SOUNDLEVEL);
-    
+    let mut mutablehandle = handle.clone();
+    let should_stop = {
+        let state = handle.state::<Mutex<AppState>>();
+        let mut app_state = state.lock().unwrap();
+        app_state.thestate
+    };
 
-    let TheAppStruct : TheApp = TheApp { SoundPath: StructState.SoundPath, Limits: StructState.Limits, Adjustments: StructState.Adjustments };
-    TheAppStruct.create(handle).await;
-    
-    Ok(())
+    if should_stop == true{
+        stop(&mut mutablehandle).await;
+        notifysend(format!("Stop"), format!("App was already running in background, now it's stopped.")).await;
+        Ok(())
+    }
+
+    else{
+        println!("SoundPath : {}", StructState.SoundPath);
+        println!("Limits : {:?}", StructState.Limits);
+        println!("Adjustments-SOUNDFX : {:?}", StructState.Adjustments.SOUNDFX); 
+        println!("Adjustments-CHECKINTERVAL : {}", StructState.Adjustments.CHECKINTERVAL);
+        println!("Adjustments-SOUNDLEVEL : {}", StructState.Adjustments.SOUNDLEVEL);
+        
+
+        let TheAppStruct : TheApp = TheApp { SoundPath: StructState.SoundPath, Limits: StructState.Limits, Adjustments: StructState.Adjustments };
+        TheAppStruct.create(handle.clone()).await;
+        
+        Ok(())
+    }
+
+
+}
+
+
+#[tauri::command]
+async fn stop(handle : &mut AppHandle) -> Result<(), String>{
+
+    let cancellation_token = {
+        let state = handle.state::<Mutex<AppState>>();
+        let mut app_state = state.lock().unwrap();
+        app_state.thestate = false;
+        app_state.thekey.remove("TheKey")
+    };
+
+    match cancellation_token {
+        Some(token) => {
+            token.cancel();
+            Ok(())
+        }
+        None => Ok(()),
+    }
+
 }
 
 async fn watch_hardware(cancellationtoken : CancellationToken, app : TheApp, handle : AppHandle){
@@ -106,25 +151,26 @@ async fn watch_hardware(cancellationtoken : CancellationToken, app : TheApp, han
     for limit in app.Limits.iter(){
         let WorkerStruct = app.clone();
         let WorkerHandle = handle.clone();
+        let workertoken = cancellationtoken.clone();
         match limit{
             Limits::Cpu { Rate } => {
                 tokio::spawn(async move {
-                    Async_Cpu( WorkerHandle, WorkerStruct).await
+                    Async_Cpu( WorkerHandle, WorkerStruct, workertoken).await
                 });
             },
             Limits::Gpu { Rate } => {
                 tokio::spawn(async move {
-                    Async_Gpu( WorkerHandle, WorkerStruct).await
+                    Async_Gpu( WorkerHandle, WorkerStruct, workertoken).await
                 });
             },
             Limits::Memory { Rate } => {
                 tokio::spawn(async move {
-                    Async_Memory( WorkerHandle, WorkerStruct).await
+                    Async_Memory( WorkerHandle, WorkerStruct, workertoken).await
                 });
             },
             Limits::Heat { Rate } => {
                 tokio::spawn(async move {
-                    Async_Heat( WorkerHandle, WorkerStruct).await
+                    Async_Heat( WorkerHandle, WorkerStruct, workertoken).await
                 });
             },
         }
@@ -132,41 +178,54 @@ async fn watch_hardware(cancellationtoken : CancellationToken, app : TheApp, han
 }
 
 
-async fn Async_Cpu(handle : AppHandle, app : TheApp) {
+async fn Async_Cpu(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken) {
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
                 println!("test for cpu");
+            },
+
+            _ = cancellationtoken.cancelled() => {
+                break;
             }
         }
     }
 }
 
-async fn Async_Gpu(handle : AppHandle, app : TheApp) {
+async fn Async_Gpu(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken) {
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
                 println!("test for gpu");
+            },
+            _ = cancellationtoken.cancelled() => {
+                break;
             }
         }
     }
 }
 
-async fn Async_Memory(handle : AppHandle, app : TheApp) {
+async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken) {
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
                 println!("test for mem");
+            },
+            _ = cancellationtoken.cancelled() => {
+                break;
             }
         }
     }
 }
 
-async fn Async_Heat(handle : AppHandle, app : TheApp) {
+async fn Async_Heat(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken) {
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
                 println!("test for heat");
+            },
+            _ = cancellationtoken.cancelled() => {
+                break;
             }
         }
     }
