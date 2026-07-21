@@ -223,7 +223,7 @@ async fn watch_hardware(cancellationtoken : CancellationToken, playercancellatio
             },
             Limits::Memory { Rate } => {
                 tokio::spawn(async move {
-                    Async_Memory( &mut WorkerHandle, WorkerStruct, workertoken, Rate).await
+                    Async_Memory( &mut WorkerHandle, WorkerStruct, workertoken, workerplayertoken, Rate).await
                 });
             },
             Limits::Heat { Rate } => {
@@ -278,7 +278,7 @@ async fn Async_Cpu(handle : &mut AppHandle, app : TheApp, cancellationtoken : Ca
 }
 
 
-async fn Async_Memory(handle : &mut AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
+async fn Async_Memory(handle : &mut AppHandle, app : TheApp, cancellationtoken : CancellationToken, playercancellationtoken : CancellationToken, rate : u8) {
 
     let mut sys = System::new_with_specifics(
         RefreshKind::nothing()
@@ -295,12 +295,17 @@ async fn Async_Memory(handle : &mut AppHandle, app : TheApp, cancellationtoken :
                 println!("test : {}", (total_memory * rate as u64) / 100);
                 if used_memory > (total_memory * rate as u64) / 100{
                     let mut mutablehandle = handle.clone();
-                    let _ = playsound(handle.clone(),app.clone(), cancellationtoken.clone()).await;
+                            let p_handle = handle.clone();
+                            let p_app = app.clone();
+                            let p_token = playercancellationtoken.clone();
+                            tokio::spawn(async move {
+                                let _ = playsound(p_handle, p_app, p_token).await;
+                            });
                     let _ = notifysend(
                         String::from("Hardware limit reached"),
                         format!("Memory usage crossed the configured limit: {}%", rate)
                     ).await;
-                    let _ = stop(&mut mutablehandle).await;
+                    let _ = stop_watcher_only(&mut mutablehandle).await;
                     break;
                 }
 
