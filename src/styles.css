@@ -240,13 +240,6 @@ body{
   background-color: black;
 }
 
-.gpuratelimit{
-  position: absolute;
-  top: 325px;
-  left: 50px;
-  width: 150px;
-  background-color: black;
-}
 
 .ramratelimit{
   position: absolute;
@@ -258,7 +251,7 @@ body{
 
 .heatratelimit{
   position: absolute;
-  top: 475px;
+  top: 325px;
   left: 50px;
   width: 150px;
   background-color: black;
@@ -312,13 +305,7 @@ body{
   font-family: Audiowide;
 }
 
-.lb5{
-  position: absolute;
-  top: 450px;
-  left: 50px;
-  color: white;
-  font-family: Audiowide;
-}
+
 
 .lb6{
   position: absolute;

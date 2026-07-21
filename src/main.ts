@@ -29,7 +29,6 @@ const PlaySoundImg = document.getElementById("playimg") as HTMLImageElement;
 const StartStopImg = document.getElementById("start_stop_img") as HTMLImageElement;
 
 const CpuRateLimit = document.getElementById("cpuratelimit") as HTMLInputElement;
-const GpuRateLimit = document.getElementById("gpuratelimit") as HTMLInputElement;
 const RamRateLimit = document.getElementById("ramratelimit") as HTMLInputElement;
 const HeatRateLimit = document.getElementById("heatratelimit") as HTMLInputElement;
 const SoundLevel = document.getElementById("soundlevel") as HTMLInputElement;
@@ -38,7 +37,6 @@ const Label1 = document.getElementById("label1") as HTMLLabelElement;
 const Label2 = document.getElementById("label2") as HTMLLabelElement;
 const Label3 = document.getElementById("label3") as HTMLLabelElement;
 const Label4 = document.getElementById("label4") as HTMLLabelElement;
-const Label5 = document.getElementById("label5") as HTMLLabelElement;
 const Label6 = document.getElementById("label6") as HTMLLabelElement;
 const Label7 = document.getElementById("label7") as HTMLLabelElement;
 const Label8 = document.getElementById("label8") as HTMLLabelElement;
@@ -59,6 +57,13 @@ enum SoundFx{
     SPEED200X = "SPEED200X",
     SPEED250X = "SPEED250X",
     SPEED300X = "SPEED300X",
+    BASSBOOST1 = "BASSBOOST1",
+    BASSBOOST2 = "BASSBOOST2",
+    BASSBOOST3 = "BASSBOOST3",
+    SLOWDOWN75X = "SLOWDOWN75X",
+    SLOWDOWN50X = "SLOWDOWN50X",
+    SLOWDOWN25X = "SLOWDOWN25X",
+    SLOWDOWN15X = "SLOWDOWN15X",
 }
 
 interface TheSound{
@@ -85,7 +90,6 @@ interface TheApp{
 
 type Limits = 
  | { Limit: "Cpu", LimitValue: { Rate : Number } }
- | { Limit: "Gpu", LimitValue: { Rate : Number } }
  | { Limit: "Memory", LimitValue: { Rate : Number } }
  | { Limit: "Heat", LimitValue: { Rate : Number } }
 
@@ -109,12 +113,6 @@ async function Start() {
     selectedLimits.push({
       Limit : "Cpu",
       LimitValue : {Rate : +CpuRateLimit.value},
-    })
-  }
-  if(+GpuRateLimit.value > 0){
-    selectedLimits.push({
-      Limit : "Gpu",
-      LimitValue : {Rate : +GpuRateLimit.value},
     })
   }
   if(+RamRateLimit.value > 0){
@@ -173,7 +171,6 @@ async function Start() {
 
 async function ToZero() {
   CpuRateLimit.value = "0";
-  GpuRateLimit.value = "0";
   RamRateLimit.value = "0";
   HeatRateLimit.value = "0";
   SoundLevel.value = "0";
@@ -218,7 +215,7 @@ async function get_soundfx(Soundfx:String) {
 }
 
 async function LoadAnimations() {
-  const staticElements = [MainTitle, AdjDivTitle, Label1, Label2, Label3, Label4, Label5, Label6, Label7, Label8, Label9];
+  const staticElements = [MainTitle, AdjDivTitle, Label1, Label2, Label3, Label4, Label6, Label7, Label8, Label9];
   const dynamicElements = Array.from(document.querySelectorAll(".applist-value"));
 
   const allElements = [...staticElements, ...dynamicElements];
@@ -276,16 +273,14 @@ CpuRateLimit.addEventListener("input", () => {
   Label2.textContent = "Cpu Limit : " + CpuRateLimit.value + "%";
 });
 
-GpuRateLimit.addEventListener("input", () => {
-  Label3.textContent = "Cpu Limit : " + GpuRateLimit.value + "%";
-});
+
 
 RamRateLimit.addEventListener("input", () => {
   Label4.textContent = "Ram Limit : " + RamRateLimit.value + "%";
 });
 
 HeatRateLimit.addEventListener("input", () => {
-  Label5.textContent = "Heat : " + HeatRateLimit.value + "℃";
+  Label3.textContent = "Heat : " + HeatRateLimit.value + "℃";
 });
 
 SoundLevel.addEventListener("input", () => {

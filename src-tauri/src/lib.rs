@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use rodio::{Decoder, DeviceSinkBuilder, Player, Source};
 use std::sync::Mutex;
-use std::fs::{create_dir_all, read_dir};
+use std::fs::{File, create_dir_all, read_dir};
 use infer;
 use tokio::time::{sleep, Duration};
 use tauri::{AppHandle, Manager};
@@ -34,7 +35,6 @@ struct ProcessList{
 #[serde(tag = "Limit", content = "LimitValue")]
 pub enum Limits {
     Cpu { Rate : u8 },
-    Gpu { Rate : u8 },
     Memory { Rate : u8 },
     Heat { Rate : u8 },
 }
@@ -48,6 +48,32 @@ enum SoundFx{
     SPEED200X,
     SPEED250X,
     SPEED300X,
+    BASSBOOST1,
+    BASSBOOST2,
+    BASSBOOST3,
+    SLOWDOWN75X,
+    SLOWDOWN50X,
+    SLOWDOWN25X,
+    SLOWDOWN15X,
+}
+
+fn soundfx_profile(soundfx: &SoundFx) -> (f32, f32) {
+    match soundfx {
+        SoundFx::NONE => (1.0, 1.0),
+        SoundFx::SPEED125X => (1.25, 1.0),
+        SoundFx::SPEED150X => (1.50, 1.0),
+        SoundFx::SPEED175X => (1.75, 1.0),
+        SoundFx::SPEED200X => (2.00, 1.0),
+        SoundFx::SPEED250X => (2.50, 1.0),
+        SoundFx::SPEED300X => (3.00, 1.0),
+        SoundFx::BASSBOOST1 => (1.0, 1.15),
+        SoundFx::BASSBOOST2 => (1.0, 1.25),
+        SoundFx::BASSBOOST3 => (1.0, 1.35),
+        SoundFx::SLOWDOWN75X => (0.75, 1.0),
+        SoundFx::SLOWDOWN50X => (0.50, 1.0),
+        SoundFx::SLOWDOWN25X => (0.25, 1.0),
+        SoundFx::SLOWDOWN15X => (0.15, 1.0),
+    }
 }
 
 #[derive(serde::Serialize, Deserialize, Debug, Clone)]
@@ -82,8 +108,6 @@ impl TheApp {
         let mut app_state = state.lock().unwrap();
         app_state.thekey.insert(format!("TheKey"), cancellationtoken);
         app_state.thestate = true;
-        
-
     }
 }
 
@@ -101,7 +125,7 @@ async fn create(
     };
 
     if should_stop == true{
-        stop(&mut mutablehandle).await;
+        let _ = stop(&mut mutablehandle).await;
         notifysend(format!("Stop"), format!("App was already running in background, now it's stopped.")).await;
         Ok(())
     }
@@ -156,11 +180,6 @@ async fn watch_hardware(cancellationtoken : CancellationToken, app : TheApp, han
                     Async_Cpu( WorkerHandle, WorkerStruct, workertoken, Rate).await
                 });
             },
-            Limits::Gpu { Rate } => {
-                tokio::spawn(async move {
-                    Async_Gpu( WorkerHandle, WorkerStruct, workertoken, Rate).await
-                });
-            },
             Limits::Memory { Rate } => {
                 tokio::spawn(async move {
                     Async_Memory( WorkerHandle, WorkerStruct, workertoken, Rate).await
@@ -197,6 +216,16 @@ async fn Async_Cpu(handle : AppHandle, app : TheApp, cancellationtoken : Cancell
 
                 total_cpu_usage = total_cpu_usage / total_cpus as f32;
                 println!("Total Usage : {}", total_cpu_usage);
+                if total_cpu_usage > rate as f32 {
+                    let mut mutablehandle = handle.clone();
+                    let _ = playsound(app.clone()).await;
+                    let _ = notifysend(
+                        String::from("Hardware limit reached"),
+                        format!("CPU usage crossed the configured limit: {}%", rate)
+                    ).await;
+                    let _ = stop(&mut mutablehandle).await;
+                    break;
+                }
 
             },
 
@@ -207,18 +236,6 @@ async fn Async_Cpu(handle : AppHandle, app : TheApp, cancellationtoken : Cancell
     }
 }
 
-async fn Async_Gpu(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
-    loop {
-        tokio::select! {
-            _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
-                println!("test for gpu");
-            },
-            _ = cancellationtoken.cancelled() => {
-                break;
-            }
-        }
-    }
-}
 
 async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
 
@@ -236,7 +253,14 @@ async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : Canc
                 let total_memory = sys.total_memory() / 1_000000000;
                 println!("test : {}", (total_memory * rate as u64) / 100);
                 if used_memory > (total_memory * rate as u64) / 100{
-                    println!("LIMIT REACHED!")
+                    let mut mutablehandle = handle.clone();
+                    let _ = playsound(app.clone()).await;
+                    let _ = notifysend(
+                        String::from("Hardware limit reached"),
+                        format!("Memory usage crossed the configured limit: {}%", rate)
+                    ).await;
+                    let _ = stop(&mut mutablehandle).await;
+                    break;
                 }
 
             },
@@ -248,16 +272,59 @@ async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : Canc
 }
 
 async fn Async_Heat(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
+    let mut components = Components::new_with_refreshed_list();
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs_f32(app.Adjustments.CHECKINTERVAL)) => {
-                println!("test for heat");
+                components.refresh(false);
+                for component in components.list().iter(){
+                    let label = component.label().to_lowercase();
+                    if label.contains("tctl") || label.contains("package") { //k10temp for amd cpus and coretemp for intel cpus.
+                        println!("HEAT : {:?}", component.temperature());
+                        if component.temperature().unwrap() > rate as f32{
+                            let mut mutablehandle = handle.clone();
+                            let _ = playsound(app.clone()).await;
+                            let _ = notifysend(
+                                String::from("Hardware limit reached"),
+                                format!("Temperature crossed the configured limit: {}°C", rate)
+                            ).await;
+                            let _ = stop(&mut mutablehandle).await;
+                            break;
+                        }
+                    }
+                }
             },
             _ = cancellationtoken.cancelled() => {
                 break;
             }
         }
     }
+}
+
+
+async fn playsound(app : TheApp) -> Result<(), String>{
+    let sound_path = app.SoundPath.clone();
+    let sound_level = app.Adjustments.SOUNDLEVEL as f32 / 100.0;
+    let soundfx = app.Adjustments.SOUNDFX.clone();
+
+    tokio::task::spawn_blocking(move || {
+        let file = File::open(&sound_path)
+            .map_err(|e| format!("Failed to open sound file '{}': {}", sound_path, e))?;
+        let sink_handle = DeviceSinkBuilder::open_default_sink()
+            .map_err(|e| format!("Failed to open audio output: {}", e))?;
+        let player = Player::connect_new(&sink_handle.mixer());
+        let source = Decoder::try_from(file)
+            .map_err(|e| format!("Failed to decode sound file '{}': {}", sound_path, e))?;
+        let (speed, gain) = soundfx_profile(&soundfx);
+
+        player.append(source.speed(speed).amplify(gain * sound_level));
+        player.sleep_until_end();
+
+        Ok::<(), String>(())
+    })
+    .await
+    .map_err(|e| format!("Audio playback task failed: {}", e))?
+
 }
 
 #[tauri::command]
