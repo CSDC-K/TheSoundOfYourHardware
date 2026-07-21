@@ -13,7 +13,8 @@ use tokio_util::sync::CancellationToken;
 
 #[derive(Default)]
 struct AppState{
-    thekey : HashMap<String, CancellationToken>,
+    watcher_key : HashMap<String, CancellationToken>,
+    player_key : HashMap<String, CancellationToken>,
     thestate : bool
 }
 
@@ -96,17 +97,20 @@ struct TheApp {
 impl TheApp {
     pub async fn create(self, handle : AppHandle) {
 
-        let cancellationtoken = CancellationToken::new();
-        let active_token = cancellationtoken.clone();
+        let watcher_token = CancellationToken::new();
+        let player_token = CancellationToken::new();
+        let active_token = watcher_token.clone();
+        let active_player_token = player_token.clone();
         let worker_handle = handle.clone();
 
         tokio::spawn(async move {
-            watch_hardware(active_token, self, worker_handle).await;
+            watch_hardware(active_token, active_player_token, self, worker_handle).await;
         });
 
         let state = handle.state::<Mutex<AppState>>();
         let mut app_state = state.lock().unwrap();
-        app_state.thekey.insert(format!("TheKey"), cancellationtoken);
+        app_state.watcher_key.insert(format!("watcher_key"), watcher_token);
+        app_state.player_key.insert(format!("player_key"), player_token);
         app_state.thestate = true;
     }
 }
@@ -124,6 +128,8 @@ async fn create(
         app_state.thestate
     };
 
+    println!("STATE : {}", should_stop);
+
     if should_stop == true{
         let _ = stop(&mut mutablehandle).await;
         notifysend(format!("Stop"), format!("App was already running in background, now it's stopped.")).await;
@@ -136,7 +142,11 @@ async fn create(
         println!("Adjustments-SOUNDFX : {:?}", StructState.Adjustments.SOUNDFX); 
         println!("Adjustments-CHECKINTERVAL : {}", StructState.Adjustments.CHECKINTERVAL);
         println!("Adjustments-SOUNDLEVEL : {}", StructState.Adjustments.SOUNDLEVEL);
-        
+        let mut should_stop = {
+            let state = handle.state::<Mutex<AppState>>();
+            let mut app_state = state.lock().unwrap();
+            app_state.thestate = true;
+        };
 
         let TheAppStruct : TheApp = TheApp { SoundPath: StructState.SoundPath, Limits: StructState.Limits, Adjustments: StructState.Adjustments };
         TheAppStruct.create(handle.clone()).await;
@@ -151,14 +161,28 @@ async fn create(
 #[tauri::command]
 async fn stop(handle : &mut AppHandle) -> Result<(), String>{
 
-    let cancellation_token = {
+    let watcher_token = {
         let state = handle.state::<Mutex<AppState>>();
         let mut app_state = state.lock().unwrap();
         app_state.thestate = false;
-        app_state.thekey.remove("TheKey")
+        app_state.watcher_key.remove("watcher_key")
     };
 
-    match cancellation_token {
+    let player_token = {
+        let state = handle.state::<Mutex<AppState>>();
+        let mut app_state = state.lock().unwrap();
+        app_state.thestate = false;
+        app_state.player_key.remove("player_key")
+    };
+
+    match watcher_token {
+        Some(token) => {
+            token.cancel();
+        }
+        None => println!("err"),
+    };
+
+    match player_token {
         Some(token) => {
             token.cancel();
             Ok(())
@@ -168,26 +192,43 @@ async fn stop(handle : &mut AppHandle) -> Result<(), String>{
 
 }
 
-async fn watch_hardware(cancellationtoken : CancellationToken, app : TheApp, handle : AppHandle){
+async fn stop_watcher_only(handle : &mut AppHandle) -> Result<(), String> {
+    let watcher_token = {
+        let state = handle.state::<Mutex<AppState>>();
+        let mut app_state = state.lock().unwrap();
+        app_state.watcher_key.remove("watcher_key")
+    };
+
+    match watcher_token {
+        Some(token) => {
+            token.cancel();
+            Ok(())
+        }
+        None => Ok(()),
+    }
+}
+
+async fn watch_hardware(cancellationtoken : CancellationToken, playercancellationtoken : CancellationToken,app : TheApp, handle : AppHandle){
 
     for limit in app.Limits.iter().cloned(){
         let WorkerStruct = app.clone();
-        let WorkerHandle = handle.clone();
+        let mut WorkerHandle = handle.clone();
         let workertoken = cancellationtoken.clone();
+        let workerplayertoken = playercancellationtoken.clone();
         match limit{
             Limits::Cpu { Rate } => {
                 tokio::spawn(async move {
-                    Async_Cpu( WorkerHandle, WorkerStruct, workertoken, Rate).await
+                    Async_Cpu( &mut WorkerHandle, WorkerStruct, workertoken, Rate).await
                 });
             },
             Limits::Memory { Rate } => {
                 tokio::spawn(async move {
-                    Async_Memory( WorkerHandle, WorkerStruct, workertoken, Rate).await
+                    Async_Memory( &mut WorkerHandle, WorkerStruct, workertoken, Rate).await
                 });
             },
             Limits::Heat { Rate } => {
                 tokio::spawn(async move {
-                    Async_Heat( WorkerHandle, WorkerStruct, workertoken, Rate).await
+                    Async_Heat( &mut WorkerHandle, WorkerStruct, workertoken, workerplayertoken,Rate).await
                 });
             },
         }
@@ -195,7 +236,7 @@ async fn watch_hardware(cancellationtoken : CancellationToken, app : TheApp, han
 }
 
 
-async fn Async_Cpu(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
+async fn Async_Cpu(handle : &mut AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
 
     let mut sys = System::new_with_specifics(
         RefreshKind::nothing()
@@ -218,7 +259,7 @@ async fn Async_Cpu(handle : AppHandle, app : TheApp, cancellationtoken : Cancell
                 println!("Total Usage : {}", total_cpu_usage);
                 if total_cpu_usage > rate as f32 {
                     let mut mutablehandle = handle.clone();
-                    let _ = playsound(app.clone()).await;
+                    let _ = playsound(handle.clone(),app.clone(), cancellationtoken.clone()).await;
                     let _ = notifysend(
                         String::from("Hardware limit reached"),
                         format!("CPU usage crossed the configured limit: {}%", rate)
@@ -237,7 +278,7 @@ async fn Async_Cpu(handle : AppHandle, app : TheApp, cancellationtoken : Cancell
 }
 
 
-async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
+async fn Async_Memory(handle : &mut AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
 
     let mut sys = System::new_with_specifics(
         RefreshKind::nothing()
@@ -254,7 +295,7 @@ async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : Canc
                 println!("test : {}", (total_memory * rate as u64) / 100);
                 if used_memory > (total_memory * rate as u64) / 100{
                     let mut mutablehandle = handle.clone();
-                    let _ = playsound(app.clone()).await;
+                    let _ = playsound(handle.clone(),app.clone(), cancellationtoken.clone()).await;
                     let _ = notifysend(
                         String::from("Hardware limit reached"),
                         format!("Memory usage crossed the configured limit: {}%", rate)
@@ -271,7 +312,7 @@ async fn Async_Memory(handle : AppHandle, app : TheApp, cancellationtoken : Canc
     }
 }
 
-async fn Async_Heat(handle : AppHandle, app : TheApp, cancellationtoken : CancellationToken, rate : u8) {
+async fn Async_Heat(handle : &mut AppHandle, app : TheApp, cancellationtoken : CancellationToken, playercancellationtoken : CancellationToken,rate : u8) {
     let mut components = Components::new_with_refreshed_list();
     loop {
         tokio::select! {
@@ -283,12 +324,17 @@ async fn Async_Heat(handle : AppHandle, app : TheApp, cancellationtoken : Cancel
                         println!("HEAT : {:?}", component.temperature());
                         if component.temperature().unwrap() > rate as f32{
                             let mut mutablehandle = handle.clone();
-                            let _ = playsound(app.clone()).await;
+                            let p_handle = handle.clone();
+                            let p_app = app.clone();
+                            let p_token = playercancellationtoken.clone();
+                            tokio::spawn(async move {
+                                let _ = playsound(p_handle, p_app, p_token).await;
+                            });
                             let _ = notifysend(
                                 String::from("Hardware limit reached"),
                                 format!("Temperature crossed the configured limit: {}°C", rate)
                             ).await;
-                            let _ = stop(&mut mutablehandle).await;
+                            let _ = stop_watcher_only(&mut mutablehandle).await;
                             break;
                         }
                     }
@@ -302,7 +348,8 @@ async fn Async_Heat(handle : AppHandle, app : TheApp, cancellationtoken : Cancel
 }
 
 
-async fn playsound(app : TheApp) -> Result<(), String>{
+
+pub async fn playsound(handle: AppHandle, app: TheApp, cancel_token: CancellationToken) -> Result<(), String> {
     let sound_path = app.SoundPath.clone();
     let sound_level = app.Adjustments.SOUNDLEVEL as f32 / 100.0;
     let soundfx = app.Adjustments.SOUNDFX.clone();
@@ -310,23 +357,67 @@ async fn playsound(app : TheApp) -> Result<(), String>{
     tokio::task::spawn_blocking(move || {
         let file = File::open(&sound_path)
             .map_err(|e| format!("Failed to open sound file '{}': {}", sound_path, e))?;
+
         let sink_handle = DeviceSinkBuilder::open_default_sink()
             .map_err(|e| format!("Failed to open audio output: {}", e))?;
+
         let player = Player::connect_new(&sink_handle.mixer());
+
         let source = Decoder::try_from(file)
             .map_err(|e| format!("Failed to decode sound file '{}': {}", sound_path, e))?;
-        let (speed, gain) = soundfx_profile(&soundfx);
 
-        player.append(source.speed(speed).amplify(gain * sound_level));
-        player.sleep_until_end();
+
+        match soundfx {
+
+            SoundFx::SPEED125X => player.append(source.speed(1.25).amplify(sound_level)),
+            SoundFx::SPEED150X => player.append(source.speed(1.50).amplify(sound_level)),
+            SoundFx::SPEED175X => player.append(source.speed(1.75).amplify(sound_level)),
+            SoundFx::SPEED200X => player.append(source.speed(2.00).amplify(sound_level)),
+            SoundFx::SPEED250X => player.append(source.speed(2.50).amplify(sound_level)),
+            SoundFx::SPEED300X => player.append(source.speed(3.00).amplify(sound_level)),
+
+            SoundFx::SLOWDOWN75X => player.append(source.speed(0.75).amplify(sound_level)),
+            SoundFx::SLOWDOWN50X => player.append(source.speed(0.50).amplify(sound_level)),
+            SoundFx::SLOWDOWN25X => player.append(source.speed(0.25).amplify(sound_level)),
+            SoundFx::SLOWDOWN15X => player.append(source.speed(0.15).amplify(sound_level)),
+
+            SoundFx::BASSBOOST1 | SoundFx::BASSBOOST2 | SoundFx::BASSBOOST3 => {
+                let boost_factor = match soundfx {
+                    SoundFx::BASSBOOST1 => 1.8,
+                    SoundFx::BASSBOOST2 => 2.8,
+                    SoundFx::BASSBOOST3 => 4.2,
+                    _ => 1.0,
+                };
+
+                let buffered = source.buffered();
+                let bass = buffered.clone().low_pass(180).amplify(boost_factor);
+                let mixed_source = buffered.mix(bass).amplify(sound_level);
+
+                player.append(mixed_source);
+            }
+
+            SoundFx::NONE => player.append(source.amplify(sound_level)),
+        }
+        while !player.empty() && !player.is_paused() {
+            if cancel_token.is_cancelled() {
+                let state_change = {
+                    println!("PLAYER_SHUTTED");
+                    let state = handle.state::<Mutex<AppState>>();
+                    let mut app_state = state.lock().unwrap();
+                    app_state.thestate = false;
+                    app_state.watcher_key.remove("watcher_key")
+                };
+                player.stop();
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(50));
+        }
 
         Ok::<(), String>(())
     })
     .await
     .map_err(|e| format!("Audio playback task failed: {}", e))?
-
 }
-
 #[tauri::command]
 async fn get_sounds(handle : AppHandle) -> Vec<TheSound> {
     let mut path = handle.path().app_local_data_dir().expect("Got an error while trying to get app_local_data_dir");

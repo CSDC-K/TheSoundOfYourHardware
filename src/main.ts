@@ -1,14 +1,10 @@
-import { app } from "@tauri-apps/api";
 import { invoke } from "@tauri-apps/api/core";
 
 
 const SoundList = document.getElementById("soundlist") as HTMLSelectElement;
 const SoundFXList = document.getElementById("soundfxlist") as HTMLSelectElement;
-const AppList = document.getElementById("applist") as HTMLUListElement;
 
 const MainDiv = document.getElementById("maindiv") as HTMLDivElement;
-const AppDiv = document.getElementById("appdiv") as HTMLDivElement;
-const AppCentralDiv = document.getElementById("appcentraldiv") as HTMLDivElement;
 const DocDiv = document.getElementById("docdiv") as HTMLDivElement;
 
 const MainTitle = document.getElementById("maintitle") as HTMLHeadElement;
@@ -17,10 +13,6 @@ const AdjDivTitle = document.getElementById("adjdivtitle") as HTMLHeadElement;
 const DocBtn = document.getElementById("docbtn") as HTMLButtonElement;
 const PlaySound = document.getElementById("playsound") as HTMLButtonElement;
 const RefreshSounds = document.getElementById("refreshsounds") as HTMLButtonElement;
-const AppListBtn = document.getElementById("applistbtn") as HTMLButtonElement;
-const AppCloseBtn = document.getElementById("app_close_btn") as HTMLButtonElement;
-const AppRefreshBtn = document.getElementById("app_refresh_btn") as HTMLButtonElement;
-const AppDeleteBtn = document.getElementById("app_delete_btn") as HTMLButtonElement;
 const DocCloseBtn = document.getElementById("doc_close_btn") as HTMLButtonElement;
 const StartBtn = document.getElementById("start") as HTMLButtonElement; 
 const ReZeroBtn = document.getElementById("rezero") as HTMLButtonElement;
@@ -37,7 +29,6 @@ const Label1 = document.getElementById("label1") as HTMLLabelElement;
 const Label2 = document.getElementById("label2") as HTMLLabelElement;
 const Label3 = document.getElementById("label3") as HTMLLabelElement;
 const Label4 = document.getElementById("label4") as HTMLLabelElement;
-const Label6 = document.getElementById("label6") as HTMLLabelElement;
 const Label7 = document.getElementById("label7") as HTMLLabelElement;
 const Label8 = document.getElementById("label8") as HTMLLabelElement;
 const Label9 = document.getElementById("label9") as HTMLLabelElement;
@@ -45,7 +36,6 @@ const Label9 = document.getElementById("label9") as HTMLLabelElement;
 
 var SoundLevelValue = SoundLevel.value;
 var PlayingSound = false;
-var TargetProcessPidValue = "";
 var SelectedFx : SoundFx;
 var PressedCreateBtn : boolean = false;
 
@@ -140,7 +130,7 @@ async function Start() {
 
   if(PressedCreateBtn == true){
     PressedCreateBtn = false;
-    StartStopImg.src = "src/assets/play.png"
+    StartStopImg.src = "src/assets/play.png";
   }
 
   else if(PressedCreateBtn == false){
@@ -177,8 +167,6 @@ async function ToZero() {
   CheckInterval.value = "0";
   SoundList.selectedIndex = 0;
   SoundFXList.selectedIndex = 0;
-  TargetProcessPidValue = "";
-  Label6.textContent = "Choose a app"
   
 }
 
@@ -194,7 +182,7 @@ async function get_soundfx(Soundfx:String) {
   if (Soundfx == "1.25x") {
     return SoundFx.SPEED125X
   }
-  if (Soundfx == "1.50x") {
+  if (Soundfx == "1.5x") {
     return SoundFx.SPEED150X
   }
   if (Soundfx == "1.75x") {
@@ -209,13 +197,34 @@ async function get_soundfx(Soundfx:String) {
   if (Soundfx == "3.0x") {
     return SoundFx.SPEED300X
   }
+  if (Soundfx == "B1") {
+    return SoundFx.BASSBOOST1
+  }
+  if (Soundfx == "B2") {
+    return SoundFx.BASSBOOST2
+  }
+  if (Soundfx == "B3") {
+    return SoundFx.BASSBOOST3
+  }
+  if (Soundfx == "0.75x") {
+    return SoundFx.SLOWDOWN75X
+  }
+  if (Soundfx == "0.50x") {
+    return SoundFx.SLOWDOWN50X
+  }
+  if (Soundfx == "0.25x") {
+    return SoundFx.SLOWDOWN25X
+  }
+  if (Soundfx == "0.15x" || Soundfx == "0.15X") {
+    return SoundFx.SLOWDOWN15X
+  }
   else{
     return SoundFx.NONE
   }
 }
 
 async function LoadAnimations() {
-  const staticElements = [MainTitle, AdjDivTitle, Label1, Label2, Label3, Label4, Label6, Label7, Label8, Label9];
+  const staticElements = [MainTitle, AdjDivTitle, Label1, Label2, Label3, Label4, Label7, Label8, Label9];
   const dynamicElements = Array.from(document.querySelectorAll(".applist-value"));
 
   const allElements = [...staticElements, ...dynamicElements];
@@ -248,22 +257,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 
 
-  try {
-    const processList = await invoke<ProcessList[]>("get_apps");
-    AppList.innerHTML = "";
-
-    for (const process of processList) {
-      const li = document.createElement("li");
-      li.className = "applist-value";
-      li.dataset.pid = process.PID.toString();
-      li.innerText = `${process.NAME}`;
-      AppList.appendChild(li);
-    }
-    
-    LoadAnimations();
-  } catch (e) {
-    console.error("Error at trying to get applist:", e);
-  }
   LoadAnimations()
 
 });
@@ -318,66 +311,8 @@ RefreshSounds.addEventListener("click", async () => {
   });
 });
 
-AppList.addEventListener("click", async(event) => {
-  const target = event.target as HTMLElement;
-  if (target && target.classList.contains("applist-value")) {
-    const selectedPID = target.dataset.pid;
-    if (selectedPID) {
-      Label6.textContent = "Choose a app (" + selectedPID + ")";
-      TargetProcessPidValue = selectedPID
-      MainDiv.style.display = "block"
-      AppDiv.style.display = "none";
-      DocDiv.style.display = "none";
-      LoadAnimations();
-    }
-  }
-});
-
-AppListBtn.addEventListener("click", async () => {
-  MainDiv.style.display = "none";
-  DocDiv.style.display = "none";
-  AppDiv.style.display = "block";
-  LoadAnimations();
-});
-
-AppRefreshBtn.addEventListener("click", async() => {
-  try {
-    const processList = await invoke<ProcessList[]>("get_apps");
-    AppList.innerHTML = "";
-
-    for (const process of processList) {
-      const li = document.createElement("li");
-      li.className = "applist-value";
-      li.dataset.pid = process.PID.toString();
-      li.innerText = `${process.NAME}`;
-      AppList.appendChild(li);
-    }
-    
-    LoadAnimations();
-  } catch (e) {
-    console.error("Error at trying to get applist:", e);
-  }
-});
-
-AppDeleteBtn.addEventListener("click", () =>  {
-  Label6.textContent = "Choose a app";
-  TargetProcessPidValue = "None"
-  MainDiv.style.display = "block"
-  AppDiv.style.display = "none";
-  DocDiv.style.display = "none";
-  LoadAnimations();
-});
-
-AppCloseBtn.addEventListener("click", () => {
-  MainDiv.style.display = "block";
-  AppDiv.style.display = "none";
-  DocDiv.style.display = "none";
-  LoadAnimations();
-});
-
 DocCloseBtn.addEventListener("click", () => {
   MainDiv.style.display = "block";
-  AppDiv.style.display = "none";
   DocDiv.style.display = "none";
   LoadAnimations();
 });
@@ -386,7 +321,6 @@ DocCloseBtn.addEventListener("click", () => {
 
 DocBtn.addEventListener("click", () => {
   MainDiv.style.display = "none";
-  AppDiv.style.display = "none";
   DocDiv.style.display = "block";
 });
 
