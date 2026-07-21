@@ -35,8 +35,7 @@ const Label9 = document.getElementById("label9") as HTMLLabelElement;
 
 
 var SoundLevelValue = SoundLevel.value;
-var PlayingSound = false;
-var SelectedFx : SoundFx;
+var PlayingSound = true;
 var PressedCreateBtn : boolean = false;
 
 enum SoundFx{
@@ -61,22 +60,8 @@ interface TheSound{
   SoundName : string, 
 }
 
-interface ProcessList{
-  PID : Number,
-  NAME : String
-}
 
-interface Adjustments{
-  SOUNDLEVEL : Number,
-  CHECKINTERVAL : Number,
-  SOUNDFX : SoundFx
-}
 
-interface TheApp{
-  SoundPath : String,
-  Limits : Limits[],
-  Adjustments : Adjustments
-}
 
 type Limits = 
  | { Limit: "Cpu", LimitValue: { Rate : Number } }
@@ -131,16 +116,19 @@ async function Start() {
   if(PressedCreateBtn == true){
     PressedCreateBtn = false;
     StartStopImg.src = "src/assets/play.png";
+    PlaySound.disabled = false;
   }
 
   else if(PressedCreateBtn == false){
     PressedCreateBtn = true;
     StartStopImg.src = "src/assets/pause.png"
+    PlaySound.disabled = true;
   }
 
 
   try{
     await invoke("create", {
+      test : false,
       structState : {
         SoundPath : SoundList.value,
         Limits : selectedLimits,
@@ -148,7 +136,8 @@ async function Start() {
           SOUNDLEVEL : +SoundLevel.value,
           CHECKINTERVAL : +CheckInterval.value || 0.1,
           SOUNDFX : await get_soundfx(SoundFXList.value)
-        }
+        },
+
       }
     })
   } catch (e) {
@@ -290,13 +279,62 @@ CheckInterval.addEventListener("input", () => {
   Label8.textContent = "Check Interval : " + CheckInterval.value + "S";
 });
 
-PlaySound.addEventListener("click", () => {
+PlaySound.addEventListener("click", async () => {
   if (PlayingSound == true){
+    if(SoundList.value == "None"){
+      await Notify("Error", "You have to select one sound!");
+      return
+    }
     PlaySoundImg.src = "src/assets/pause.png";
     PlayingSound = false;
+    StartBtn.disabled = true;
+    
+    try{
+      const selectedLimits : Limits[] = [];
+      selectedLimits.push({
+        Limit : "Memory",
+        LimitValue : {Rate : +RamRateLimit.value},
+      })
+      await invoke("create", {
+        test : true,
+        structState : {
+          SoundPath : SoundList.value,
+          Limits : selectedLimits,
+          Adjustments : {
+            SOUNDLEVEL : +SoundLevel.value,
+            CHECKINTERVAL : +CheckInterval.value || 0.1,
+            SOUNDFX : await get_soundfx(SoundFXList.value)
+          }
+        }
+      })
+    } catch (e) {
+      await Notify("Error!", "" + e);
+    }
   } else if (PlayingSound == false){
     PlaySoundImg.src = "src/assets/play.png";
     PlayingSound = true;
+    StartBtn.disabled = false;
+    try{
+      const selectedLimits : Limits[] = [];
+      selectedLimits.push({
+        Limit : "Memory",
+        LimitValue : {Rate : +RamRateLimit.value},
+      })
+      await invoke("create", {
+        test : true,
+        structState : {
+          SoundPath : SoundList.value,
+          Limits : selectedLimits,
+          Adjustments : {
+            SOUNDLEVEL : +SoundLevel.value,
+            CHECKINTERVAL : +CheckInterval.value || 0.1,
+            SOUNDFX : await get_soundfx(SoundFXList.value)
+          }
+        }
+      })
+    } catch (e) {
+      await Notify("Error!", "" + e);
+    }
   }
 });
 

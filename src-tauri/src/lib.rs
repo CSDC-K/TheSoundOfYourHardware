@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::default;
 use rodio::{Decoder, DeviceSinkBuilder, Player, Source};
 use std::sync::Mutex;
 use std::fs::{File, create_dir_all, read_dir};
@@ -94,6 +95,13 @@ struct TheApp {
     Adjustments : Adjustments
 }
 
+#[derive(Deserialize, Serialize, Debug, Clone)]
+struct TheAppTest {
+    SoundPath : String,
+    Adjustments : Adjustments
+}
+
+
 impl TheApp {
     pub async fn create(self, handle : AppHandle) {
 
@@ -115,11 +123,30 @@ impl TheApp {
     }
 }
 
+impl TheAppTest {
+    pub async fn test_sound(self, handle : AppHandle) {
+        let watcher_token = CancellationToken::new();
+        let player_token = CancellationToken::new();
+        let active_token = watcher_token.clone();
+        let active_player_token = player_token.clone();
+        let worker_handle = handle.clone();
+
+        tokio::spawn(async move{
+            playsound(worker_handle, TheApp { SoundPath: self.SoundPath, Limits: vec![Limits::Cpu { Rate: 0 }], Adjustments: self.Adjustments }, active_player_token).await;
+        });
+
+        let state = handle.state::<Mutex<AppState>>();
+        let mut app_state = state.lock().unwrap();
+        app_state.player_key.insert(format!("player_key"), player_token);
+        app_state.thestate = true;
+    }
+}
 
 #[tauri::command]
 async fn create(
     handle : AppHandle,
-    StructState : TheApp
+    StructState : TheApp,
+    test : bool
 ) -> Result<(), String>{
     let mut mutablehandle = handle.clone();
     let should_stop = {
@@ -133,7 +160,20 @@ async fn create(
     if should_stop == true{
         let _ = stop(&mut mutablehandle).await;
         notifysend(format!("Stop"), format!("App was already running in background, now it's stopped.")).await;
-        Ok(())
+        return Ok(());
+    }
+
+    else if test == true{
+        let mut should_stop = {
+            let state = handle.state::<Mutex<AppState>>();
+            let mut app_state = state.lock().unwrap();
+            app_state.thestate = true;
+        };
+
+        let TheAppStruct : TheAppTest = TheAppTest { SoundPath: StructState.SoundPath, Adjustments: StructState.Adjustments };
+        TheAppStruct.test_sound(handle.clone()).await;
+        
+        return Ok(());
     }
 
     else{

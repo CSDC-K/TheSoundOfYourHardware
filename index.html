@@ -36,8 +36,8 @@
               This app works like an acoustic automation system. You define the thresholds, and the hardware sings accordingly:
             </p>
             <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem; color: #e0e0e0;">
-              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">Target App:</strong> Click the list icon to bind the trigger engine to a specific active process PID.</li>
-              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">Hardware Limits:</strong> Adjust the sliders for CPU, GPU, RAM usage, and core heat limits. When your system crosses these markers, your selected sound will trigger.</li>
+              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">Hardware Limits:</strong> Adjust the target thresholds for CPU usage, Memory (RAM) consumption, and Core Heat. When your system crosses any of these markers, your selected sound will trigger.</li>
+              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">Trigger Behavior:</strong> Once a limit is reached, hardware monitoring automatically pauses to prevent overlapping noise, while your alert plays smoothly to completion. You can instantly halt the audio and reset the system state at any time by clicking the <strong>Stop</strong> button.</li>
             </ul>
           </article>
 
@@ -47,9 +47,9 @@
               Open the <strong>Adjustments</strong> panel to manipulate the active audio pipeline:
             </p>
             <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem; color: #e0e0e0;">
-              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">Sound Level:</strong> Control the output master volume. Pushing past 100% unleashes the full potential of your system's voice.</li>
-              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">Check Interval:</strong> Sets how frequently (in seconds) the background backend polls your hardware state.</li>
-              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">SoundFX List:</strong> Select real-time playback speed manipulation (up to 3.0x) to make the tone sound panicked as your hardware hits critical stress levels.</li>
+              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">Sound Level:</strong> Control the output master volume of the triggered alert.</li>
+              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">Check Interval:</strong> Sets how frequently (in seconds) the background process polls your hardware state.</li>
+              <li style="margin-bottom: 5px;"><strong style="color: #00ffcc;">SoundFX List:</strong> Apply real-time audio filters to your alerts. Choose from playback speed manipulation (from 0.15x slowdown up to 3.0x speed) or deep Bass Boosts to make the tone fit the critical stress levels of your system.</li>
             </ul>
           </article>
         </section>

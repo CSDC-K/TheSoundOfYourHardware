@@ -26,13 +26,27 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["appimage"],
+    "resources": [
+      "../src/assets/close.png",
+      "../src/assets/list.png",
+      "../src/assets/refresh.png",
+      "../src/assets/doc.png",
+      "../src/assets/play.png",
+      "../src/assets/pause.png",
+      "../src/assets/delete.png"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    }
   }
 }
