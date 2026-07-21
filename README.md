@@ -55,6 +55,9 @@ now you can run it like:
 thesoundofyourhardware
 ```
 
+## Where should i put sounds?
+/home/USERNAME/.local/share/com.kuzeyc.thesoundofyourhardware/Sounds/
+
 | STEP | Usage |
 | --- |  ---  |
 | 1) Choosing sound | <img src="ss1.png" alt="Sound Selection"/>|
