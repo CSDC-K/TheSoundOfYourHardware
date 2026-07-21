@@ -58,6 +58,8 @@ thesoundofyourhardware
 ## Where should i put sounds?
 /home/USERNAME/.local/share/com.kuzeyc.thesoundofyourhardware/Sounds/
 
+If you can't see sounds please restart app.
+
 | STEP | Usage |
 | --- |  ---  |
 | 1) Choosing sound | <img src="ss1.png" alt="Sound Selection"/>|
