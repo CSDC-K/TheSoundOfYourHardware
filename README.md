@@ -45,7 +45,7 @@ sudo apt update && sudo apt install -y \
   zenity
 ```
 
-then install trigox using .deb file
+then install app using .deb file
 ```bash
 sudo apt install ./thesoundofyourhardware_*_amd64.deb
 ```
