@@ -12,17 +12,17 @@
 
 ## What is TheSoundOfYourHardware?
 
-When your selected limits are reached (cpu, memory usage and general heat) your hardware hacks your computers sound system and runs whatever you selected sound and selected soundfx.
+When your hardware hits the limits you set (CPU usage, memory usage or temperature), it "takes over" your computer's sound system and plays the sound you picked, with the sound effects you picked.
 
-## How is it works?
+## How does it work?
 
-When you are pressing play button in adjustments div, that starts to watching your hardware and when your one of selected limits are reach the app adds some soundfx into your selected sound then plays it.
+Press the play button in the Adjustments panel and the app starts watching your hardware. When one of your limits is reached, it adds the selected sound effects to your sound and plays it.
 
-## Lets scream your hardware!
+## Let your hardware scream!
 
-## Installation for ubuntu
+## Installation (Ubuntu)
 
-first be sure your webkit is up-to-date
+First, make sure WebKit and the other dependencies are up to date:
 
 ```bash
 sudo apt update && sudo apt install -y \
@@ -45,20 +45,23 @@ sudo apt update && sudo apt install -y \
   zenity
 ```
 
-then install app using .deb file
+Then install the app from the `.deb` file:
 ```bash
 sudo apt install ./thesoundofyourhardware_*_amd64.deb
 ```
 
-now you can run it like:
+Now you can run it:
 ```bash
 thesoundofyourhardware
 ```
 
-## Where should i put sounds?
-/home/USERNAME/.local/share/com.kuzeyc.thesoundofyourhardware/Sounds/
+## Where should I put my sounds?
 
-If you can't see sounds please restart app.
+```
+/home/USERNAME/.local/share/com.kuzeyc.thesoundofyourhardware/Sounds/
+```
+
+If your sounds don't show up, restart the app.
 
 | STEP | Usage |
 | --- |  ---  |
@@ -68,7 +71,7 @@ If you can't see sounds please restart app.
 | 4) Checking doc page | <img src="ss4.png" alt="Doc"/>|
 | 5) Doc reading | <img src="ss5.png" alt="Doc"/>|
 
-## Used TECHS
+## Tech stack
 | Tech | Where |
 | --- |  ---  |
 | Vanilla CSS, HTML, TS | Frontend and talking with rust side |
@@ -80,17 +83,18 @@ If you can't see sounds please restart app.
 
 | Distro | Desc |
 | --- |  ---  |
-| CachyOS | I just got CachyOS so i just tried in CachyOS |
-| Ubuntu 24 lts | Live boot btw, it worked but except notification system. |
+| CachyOS | My daily system |
+| Ubuntu 24.04 LTS | Tested on a live boot; everything except notifications worked |
 
-**Note: old versions of ubuntu like before 2023 it might be not work on your distro cause of glibc version. Please test it in latest or new distros.**
+**Note:** Ubuntu versions from before 2023 may not work because of their older glibc. Please use a recent distro.
 
-## Used AIs
+## AI tools used
 
 | LLM | Usage |
 | --- |  ---  |
-| Gemini | For Researchs and code fixes |
+| Gemini | Research and code fixes |
 
 
-## Note for reviewer
-If you are thinking about isn't similiar to <href>https://github.com/CSDC-K/Trigox no it isn't. You can't add soundfx to sound and can't watch hardware.
+## Note for reviewers
+
+This is not the same project as [Trigox](https://github.com/CSDC-K/Trigox). Trigox cannot watch hardware limits or add sound effects to a sound.
